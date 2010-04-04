@@ -1,0 +1,9 @@
+{
+  "desc" : "Planning",
+  "todo" : [
+    "Build minimal scene graph" 
+  ],
+  "done" : [
+    "Setup git repo"
+  ]
+}
