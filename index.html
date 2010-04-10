@@ -2,6 +2,15 @@
   <head>
     <title>Composer</title>
     <style type="text/css">
+      body {
+        font-family:verdana;
+      }
+      
+      li {
+        list-style:none;
+        cursor: pointer;
+      }
+      
       .composer {
         border:1px solid #AAA;
        
@@ -16,12 +25,19 @@
       
       .node {
         position:absolute;
-      
+        padding:.5em;
+        background:white;
+        border:1px solid #000;
+        
       }      
             
       .dragging {
+              position:absolute;
+        padding:.5em;
+        
+        border:1px solid #000;
         position:absolute;
-        background:#F0F;
+        background:#25F;
       }
     
     </style>    
@@ -32,14 +48,20 @@
     <script type="text/javascript">
       jQuery(function() {
         jQuery(".composer .toolbar li").drag(function( event ){ // drag start
-          return jQuery(this).clone().appendTo( document.body ).addClass("dragging");
+          return jQuery(this).clone().appendTo( document.body ).hide().addClass("dragging").show(200);
         }, function( event ){ // dragging
           jQuery( event.dragProxy ).css({
             left: event.offsetX, 
             top: event.offsetY
           });
         }, function( event ){ // dragend
-          jQuery(event.dragProxy).removeClass("dragging").addClass("node");
+          if (event.dropTarget && 
+              jQuery(event.dragProxy).parent().is(".canvas") )
+          {
+            jQuery(event.dragProxy).removeClass("dragging").addClass("node");
+          } else {
+            jQuery(event.dragProxy).remove();
+          }
         });
 
         jQuery(".composer .canvas").drop(function( event ) { // drop start
