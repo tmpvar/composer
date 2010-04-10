@@ -1,9 +1,16 @@
 {
   "desc" : "Planning",
   "todo" : [
-    "Build minimal scene graph" 
+    "build node ports from the arguments of functions",
+    "build pipes, using some wireit code",
+    "implement composition in the form of drilling into composites",
+    "make conductor work on a-grade browsers if it doesn't already."
   ],
   "done" : [
+    "Get basic drag 'n drop working",
     "Setup git repo"
+  ],
+  "nope" : [
+    "Build minimal scene graph"
   ]
 }

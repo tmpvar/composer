@@ -1,6 +1,81 @@
 <html>
   <head>
     <title>Composer</title>
+    <style type="text/css">
+      .composer {
+        border:1px solid #AAA;
+       
+      }
+      
+      .composer .canvas {
+        background:#DEDEDE;
+        width:80%;
+        height:400px;
+        border-right:1px solid #BBB;
+      }
+      
+      .node {
+        position:absolute;
+      
+      }      
+            
+      .dragging {
+        position:absolute;
+        background:#F0F;
+      }
+    
+    </style>    
+    <script type="text/javascript" src="lib/jquery.js"></script>
+    <script type="text/javascript" src="lib/jquery.event.drag.js"></script>
+    <script type="text/javascript" src="lib/jquery.event.drop.js"></script>
+    <script type="text/javascript" src="lib/composer.js"></script>    
+    <script type="text/javascript">
+      jQuery(function() {
+        jQuery(".composer .toolbar li").drag(function( event ){ // drag start
+          return jQuery(this).clone().appendTo( document.body ).addClass("dragging");
+        }, function( event ){ // dragging
+          jQuery( event.dragProxy ).css({
+            left: event.offsetX, 
+            top: event.offsetY
+          });
+        }, function( event ){ // dragend
+          jQuery(event.dragProxy).removeClass("dragging").addClass("node");
+        });
+
+        jQuery(".composer .canvas").drop(function( event ) { // drop start
+            if (jQuery(event.dragProxy).hasClass("node")) {
+              return false;
+            }
+            jQuery(this).css({"background-color" : "#EEEEEE"});
+          }
+          ,function( event ){ // drop
+            
+            jQuery( event.dragProxy ).css({
+              left: event.offsetX, 
+              top: event.offsetY
+            });
+          
+            jQuery(this).append(event.dragProxy).show();
+            
+            // allow this item to be dragged again
+            jQuery(event.dragProxy).drag(function() { 
+              return jQuery(this);
+            },
+            function(ev) {
+              jQuery(this).css({
+                left: ev.offsetX, 
+                top: ev.offsetY
+              });
+            });
+            
+          }
+          ,function( event ){ // drop end
+            jQuery( this ).removeClass("active");
+            jQuery(this).css({"background-color" : ""});
+        });
+      });
+    </script>
+    
   </head>
   <body>
     <h1>Composer</h1>
@@ -13,9 +88,16 @@
       MIT, see <a href="LICENSE.txt">LICENSE.txt</a>
     </p>
     
-    <h2>Demos</h2>
-    <p>
-      coming soon..
-    </p>
+    <h2>Demo</h2>
+    <div class="composer">
+      <div class="toolbar">
+        <ul>
+          <li>constant</li>
+          <li>alert</li>
+        </ul>
+      </div>
+      <div class="canvas"></div>
+      <div class="staging"></div>
+    </div>
   </body>
 </html>
