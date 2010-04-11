@@ -6,14 +6,46 @@
         font-family:verdana;
       }
       
-      li {
+      li, ul{
         list-style:none;
+        margin:0px;
+        padding:0px;
         cursor: pointer;
+      }
+      
+      .composer .toolbar ul.in, .composer .toolbar ul.out {
+        display:none;
+      }
+      
+      ul.ports li a {
+        border:1px solid #000;
+        height:10px;
+        width:10px;
+        float:left;
+        background:white;
+        margin-right:5px;
+      }
+      
+      ul.ports.in li a:hover {
+        border:1px solid #888;
+        border-top: none;
+      }
+      
+      ul.ports.out li a:hover {
+        border:1px solid #888;
+        border-bottom:1px solid black;
+      }
+
+      ul.ports.in li a {
+        border-top:none;
+      }
+      
+      ul.ports.out li a {
+        background:black;
       }
       
       .composer {
         border:1px solid #AAA;
-       
       }
       
       .composer .canvas {
@@ -25,16 +57,15 @@
       
       .node {
         position:absolute;
-        padding:.5em;
+        padding: 0px 5px;
         background:white;
         border:1px solid #000;
         
       }      
             
       .dragging {
-              position:absolute;
+        position:absolute;
         padding:.5em;
-        
         border:1px solid #000;
         position:absolute;
         background:#25F;
@@ -47,40 +78,41 @@
     <script type="text/javascript" src="lib/composer.js"></script>    
     <script type="text/javascript">
       jQuery(function() {
-        jQuery(".composer .toolbar li").drag(function( event ){ // drag start
-          return jQuery(this).clone().appendTo( document.body ).hide().addClass("dragging").show(200);
-        }, function( event ){ // dragging
-          jQuery( event.dragProxy ).css({
-            left: event.offsetX, 
-            top: event.offsetY
+        jQuery(".composer .toolbar li").drag(function(ev){ // drag start
+          return jQuery(this).clone().appendTo( document.body )
+                .hide().addClass("dragging").show(200);
+        }, function(ev){ // dragging
+          jQuery( ev.dragProxy ).css({
+            left: ev.offsetX, 
+            top: ev.offsetY
           });
-        }, function( event ){ // dragend
-          if (event.dropTarget && 
-              jQuery(event.dragProxy).parent().is(".canvas") )
+        }, function(ev) { // dragend
+          if (ev.dropTarget && 
+              jQuery(ev.dragProxy).parent().is(".canvas") )
           {
-            jQuery(event.dragProxy).removeClass("dragging").addClass("node");
+            jQuery(ev.dragProxy).removeClass("dragging").addClass("node");
           } else {
-            jQuery(event.dragProxy).remove();
+            jQuery(ev.dragProxy).remove();
           }
         });
 
-        jQuery(".composer .canvas").drop(function( event ) { // drop start
-            if (jQuery(event.dragProxy).hasClass("node")) {
+        jQuery(".composer .canvas").drop(function(ev) { // drop start
+            if (jQuery(ev.dragProxy).hasClass("node")) {
               return false;
             }
             jQuery(this).css({"background-color" : "#EEEEEE"});
-          }
-          ,function( event ){ // drop
+          },
+          function(ev){ // drop
             
-            jQuery( event.dragProxy ).css({
-              left: event.offsetX, 
-              top: event.offsetY
+            jQuery( ev.dragProxy ).css({
+              left: ev.offsetX, 
+              top: ev.offsetY
             });
           
-            jQuery(this).append(event.dragProxy).show();
+            jQuery(this).append(ev.dragProxy).show();
             
             // allow this item to be dragged again
-            jQuery(event.dragProxy).drag(function() { 
+            jQuery(ev.dragProxy).drag(function() { 
               return jQuery(this);
             },
             function(ev) {
@@ -90,8 +122,21 @@
               });
             });
             
+            // setup pipe dragging on the outbound ports (for now)
+            jQuery(ev.dragProxy).find(".out li a").drag(function() { 
+              return jQuery(this).clone().addClass("dragging");
+            },
+            function(ev) {
+              jQuery(ev.dragProxy).css({
+                left: ev.offsetX, 
+                top: ev.offsetY
+              });
+            },
+            function(ev) {
+              jQuery(ev.dragProxy).remove();
+            });
           }
-          ,function( event ){ // drop end
+          ,function(ev){ // drop end
             jQuery( this ).removeClass("active");
             jQuery(this).css({"background-color" : ""});
         });
@@ -114,8 +159,18 @@
     <div class="composer">
       <div class="toolbar">
         <ul>
-          <li>constant</li>
-          <li>alert</li>
+          <li>
+            window.prompt
+            <ul class="ports out">
+              <li><a name="Value"></a></li>
+            </ul>
+          </li>
+          <li>
+            <ul class="ports in">
+              <li><a name="Message"></a></li>
+            </ul>          
+            window.alert
+          </li>
         </ul>
       </div>
       <div class="canvas"></div>
