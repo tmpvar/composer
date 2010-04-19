@@ -1,0 +1,35 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <title>Composer tests</title>
+    <script src="../lib/composer.js"></script>
+    <script src="http://code.jquery.com/jquery-latest.js"></script>
+    <link rel="stylesheet" href="http://github.com/jquery/qunit/raw/master/qunit/qunit.css" type="text/css" media="screen" />
+    <script type="text/javascript" src="http://github.com/jquery/qunit/raw/master/qunit/qunit.js"></script>
+    
+    <script type="text/javascript">
+      $(document).ready(function() {
+        test("As a developer I'd like to easily add components for rendering", function() {
+            var canvas   = jQuery("<canvas></canvas>")[0];
+            var instance = Composer(canvas);
+            ok(instance, "New composer created successfully");
+            ok(instance.version, "This is actually a Composer");
+            ok(canvas.composer === instance, "Canvas has been augmented to contain a reference to the composer");
+            ok(instance.canvas === canvas, "Composer holds a reference to the dom canvas element");
+        });
+        
+        
+      });
+      
+    </script>
+    
+  </head>
+  
+  <body>
+    <h1 id="qunit-header">QUnit example</h1>
+    <h2 id="qunit-banner"></h2>
+    <h2 id="qunit-userAgent"></h2>
+    <ol id="qunit-tests"></ol>    
+  </body>
+  
+</html>
