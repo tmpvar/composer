@@ -33,7 +33,7 @@
             ok(!noParts.renderer, "When you specify no parts, no parts are added");
 
             // Remove renderables
-            var renderable = Composer.Renderable({});
+            var renderable = Composer.create({},[Composer.Renderable]);
             instance.renderer.add(renderable);
             ok(instance.renderer.length === 1, "Renderable successfully added to Renderer");
             instance.renderer.remove(renderable);
@@ -53,8 +53,8 @@
 
         asyncTest("As a developer I need Composer's renderer to render consistently", 3, function() {
           var instance   = Composer(jQuery("<canvas></canvas>")[0]),
-              first  = Composer.Renderable({}),
-              second = Composer.Renderable({}),
+              first  = Composer.create({}, [Composer.Renderable]),
+              second = Composer.create({}, [Composer.Renderable]),
               lastRendered = null;
 
           first.setPos(0,0,5);
@@ -71,7 +71,7 @@
           second.render = function() {
             ok(lastRendered === first, "Renderer properly sorted and rendered two renderables");
             start();
-          }
+          };
 
           instance.renderer.add(second).add(first);
           instance.renderer.start();
@@ -80,11 +80,11 @@
         test("As a user I would like to move nodes around the composer", function() {
           var canvas   = jQuery("<canvas></canvas>")[0],
               instance = Composer(canvas)
-              node     = Composer.Renderable({});
+              node     = Composer.create({}, [Composer.Renderable, Composer.Collidable]);
 
           // Mouse collision (Picking)
           node.setPos(2,2,0).setSize(10,10);
-          ok(node.collision.aabb(10,10), "Basic AABB collision is functional");
+          ok(node.collides.aabb(10,10), "Basic AABB collision is functional");
 
         });
       });
