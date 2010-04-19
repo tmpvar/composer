@@ -12,13 +12,52 @@
         test("As a developer I'd like to easily add components for rendering", function() {
             var canvas   = jQuery("<canvas></canvas>")[0];
             var instance = Composer(canvas);
+            // basic tests
             ok(instance, "New composer created successfully");
+            try {
+              Composer();
+              ok(false, "Composer requires a canvas");
+            } catch (e) {
+              ok(true, "Composer detects an invalid canvas");
+            }
             ok(instance.version, "This is actually a Composer");
             ok(canvas.composer === instance, "Canvas has been augmented to contain a reference to the composer");
             ok(instance.canvas === canvas, "Composer holds a reference to the dom canvas element");
+
+            // Parts testing
+            ok(instance.renderer, "Renderer is automatically added into the composer");
+            
+            // No parts
+            var noParts = Composer(jQuery("<canvas></canvas>"), null, []);
+            ok(!noParts.renderer, "When you specify no parts, no parts are added");
         });
         
-        
+        asyncTest("As a developer I need Composer's renderer to render consistently", 2, function() {
+          var instance   = Composer(jQuery("<canvas></canvas>")[0]),
+              first  = Composer.Renderable({}),
+              second = Composer.Renderable({}),
+              lastRendered = null;
+
+          first.setPos(0,0,5);
+          second.setPos(0,0,6);
+
+          // override the render function for testing
+          first.render = function() {
+            ok(true, "Renderer is rendering");
+            lastRendered = first;
+            instance.renderer.stop();
+          }
+
+          second.render = function() {
+            ok(lastRendered === first, "Renderer properly sorted and rendered two renderables");
+            start();
+          }
+          instance.renderer.add(second).add(first);
+
+          instance.renderer.start();
+
+        });
+
       });
       
     </script>
@@ -26,7 +65,7 @@
   </head>
   
   <body>
-    <h1 id="qunit-header">QUnit example</h1>
+    <h1 id="qunit-header">Composer Tests</h1>
     <h2 id="qunit-banner"></h2>
     <h2 id="qunit-userAgent"></h2>
     <ol id="qunit-tests"></ol>    
