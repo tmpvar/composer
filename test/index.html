@@ -7,7 +7,6 @@
     <link rel="stylesheet" href="http://github.com/jquery/qunit/raw/master/qunit/qunit.css" type="text/css" media="screen" />
     <script type="text/javascript" src="http://github.com/jquery/qunit/raw/master/qunit/qunit.js"></script>
     <script src="lib/mouse.js"></script>
-  
     <script type="text/javascript">
       $(document).ready(function() {
         test("As a developer I'd like to easily add components for rendering", function() {
@@ -39,8 +38,19 @@
             ok(instance.renderer.length === 1, "Renderable successfully added to Renderer");
             instance.renderer.remove(renderable);
             ok(instance.renderer.length === 0, "Renderable successfully removed from Renderer")
+
+            // Renderable methods
+            var pos = Composer.Renderable({});
+            pos.setPos(1,2,3);
+            ok(pos.getPos().x === 1 && 
+               pos.getPos().y === 2 && 
+               pos.getPos().z === 3, "Position set on renderable");
+
+            pos.setSize(90,10);
+            ok(pos.getSize().width === 90 && pos.getSize().height === 10, "Size set on renderable");
+
         });
-        
+
         asyncTest("As a developer I need Composer's renderer to render consistently", 3, function() {
           var instance   = Composer(jQuery("<canvas></canvas>")[0]),
               first  = Composer.Renderable({}),
@@ -66,28 +76,25 @@
           instance.renderer.add(second).add(first);
           instance.renderer.start();
         });
-        
-        test("As a user I would like to add existing nodes into the composer", function() {
-          
+
+        test("As a user I would like to move nodes around the composer", function() {
           var canvas   = jQuery("<canvas></canvas>")[0],
               instance = Composer(canvas)
-              ;
-          
-          
-          
-          
+              node     = Composer.Renderable({});
+
+          // Mouse collision (Picking)
+          node.setPos(2,2,0).setSize(10,10);
+          ok(node.collision.aabb(10,10), "Basic AABB collision is functional");
+
         });
       });
-      
+
     </script>
-    
   </head>
-  
   <body>
     <h1 id="qunit-header">Composer Tests</h1>
     <h2 id="qunit-banner"></h2>
     <h2 id="qunit-userAgent"></h2>
-    <ol id="qunit-tests"></ol>    
+    <ol id="qunit-tests"></ol>
   </body>
-  
 </html>
