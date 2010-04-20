@@ -11,7 +11,7 @@
       $(document).ready(function() {
         test("As a developer I'd like to easily add components for rendering", function() {
             var canvas   = jQuery("<canvas></canvas>")[0];
-            var instance = Composer(canvas);
+            var instance = Composer(canvas, null, [Composer.Renderer]);
             // basic tests
             ok(instance, "New composer created successfully");
             try {
@@ -40,7 +40,7 @@
             ok(instance.renderer.length === 0, "Renderable successfully removed from Renderer")
 
             // Renderable methods
-            var pos = Composer.Renderable({});
+            var pos = Composer.create({}, [Composer.Renderable]);
             pos.setPos(1,2,3);
             ok(pos.getPos().x === 1 && 
                pos.getPos().y === 2 && 
@@ -51,32 +51,21 @@
 
         });
 
-        asyncTest("As a developer I need Composer's renderer to render consistently", 3, function() {
-          var instance   = Composer(jQuery("<canvas></canvas>")[0]),
+        test("As a developer I need Composer's renderer to render consistently", function() {
+          var instance   = Composer(jQuery("<canvas></canvas>")[0], null, [Composer.Renderer]),
               first  = Composer.create({}, null, [Composer.Renderable]),
-              second = Composer.create({}, null, [Composer.Renderable]),
               lastRendered = null;
-          Composer.Renderer(instance);
-          first.setPos(0,0,5);
-          second.setPos(0,0,6);
 
-          // override the render function for testing
-          first.render = function() {
-            ok(true, "Renderer is rendering");
-            ok(lastRendered === null, "Renderables with a lower Z index are rendered first");
-            lastRendered = first;
-            instance.renderer.stop();
-            start();
-          }
+          first.setPos(0,0,10);
 
-          second.render = function() {
-            ok(lastRendered === first, "Renderer properly sorted and rendered two renderables");
-            start();
-            instance.renderer.stop();
-          };
-
-          instance.renderer.add(second).add(first);
-          instance.renderer.start();
+          // Render order
+          ok(instance.renderer.renderIndex(first) === 0, "Objects created with Composer.create are added to the render stack");
+          second = Composer.create({}, null, [Composer.Renderable]).setPos(0,0,10);
+          ok(instance.renderer.renderIndex(second) === 1, "A newly added node with the same z is at the second render index");
+          
+          first.z = 100;
+          ok(instance.renderer.renderIndex(first) === 1, "The render stack resorted correctly");
+          
         });
 
         test("As a user I would like to move nodes around the composer", function() {
@@ -87,7 +76,7 @@
           // Mouse collision (Picking)
           node.setPos(2,2,0).setSize(10,10);
           ok(node.collides.aabb(10,10), "Basic AABB collision is functional");
-
+        
         });
       });
 

@@ -14,20 +14,17 @@
         Composer.Renderer(instance);
         instance.renderer.start();
         
-        var canvasWidth = jQuery("canvas").attr("width");
-        var size= 200;
-        var total = (canvasWidth/size * canvasWidth/size);
-
-        function createNode(i) {
-          var width =  jQuery("canvas").attr("width")/size;
-          var x      = i%jQuery("canvas").attr("width");
-          var y      = Math.floor(i/jQuery("canvas").attr("width"))*size;
-          
-          
-          var node = Composer.create({}, [Composer.Renderable, Composer.Collidable, Composer.Draggable]);
-          node.setSize(size,size).setPos(x,y,0);
+        var canvasWidth = jQuery("canvas").attr("width"),
+            size  = 200,
+            total = (canvasWidth/size * canvasWidth/size),
+            width =  jQuery("canvas").attr("width")/size;
         
-          node.color = "rgb(" +  (i%255) + "," + (i%255) + "," + (i%255) + ")";
+        // TODO: move this into core, probably into a "NodeBuilder" feature/part    
+        function createNode(x,y,z,color) {
+          var node = Composer.create({}, [Composer.Renderable, Composer.Collidable, Composer.Draggable]);
+          node.setSize(size,size).setPos(x,y,z);
+
+          node.color = color || "rgb(" +  (x%255) + "," + (y%127) + "," + (y%255) + ")";
           node.render = function() {
             this.composer.renderer.context.fillStyle = node.color ;
             this.composer.renderer.context.fillRect(node.getPos().x,
@@ -40,9 +37,25 @@
         }
         
         for (var i=0; i<total; i++)
-        {
-          createNode(i*size);
+        { 
+          var base = i*size;
+          var x = base%canvasWidth, y = Math.floor(base/canvasWidth)*size;
+          createNode(x,y,0);
         }
+        
+        // TODO: refactor into core
+        var green = 0;
+        document.addEventListener("keydown", function(ev) {
+          switch (ev.keyCode) {
+            case 78:
+              if (ev.ctrlKey) {
+                green+=10
+                console.log("rgb(" + (green*2%255) + "," + (green%127) + "," + (green%255) + ")");
+                createNode(100, 100, green/10, "rgb(" + (green*2%255) + "," + (green%127) + "," + (green%255) + ")");
+              }
+            break;
+          }
+        }, true);
         
         
       });
