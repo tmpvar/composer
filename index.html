@@ -24,6 +24,12 @@
         instance.dragstart = function(ev) {
           instance.z = -10;
           var ox = ev.canvasOffset.x-instance.x, oy = ev.canvasOffset.y-instance.y;
+          
+          if (instance.hasOwnProperty('x') && instance.hasOwnProperty('y')) {
+            //ox += instance.x;
+            //oy += instance.y;
+          }
+
           instance.mouseOffset = {x:ox, y:oy};
         };
         
