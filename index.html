@@ -17,7 +17,7 @@
         var canvasWidth = jQuery("canvas").attr("width");
         var size= 200;
         var total = (canvasWidth/size * canvasWidth/size);
-alert(total);
+
         function createNode(i) {
           var width =  jQuery("canvas").attr("width")/size;
           var x      = i%jQuery("canvas").attr("width");
@@ -27,13 +27,15 @@ alert(total);
           var node = Composer.create({}, [Composer.Renderable, Composer.Collidable, Composer.Draggable]);
           node.setSize(size,size).setPos(x,y,0);
         
-          node.color = "rgb(" +  (i%127) + "," + Math.floor(Math.random()*255)%255 + "," + (i%255) + ")";
+          node.color = "rgb(" +  (i%255) + "," + (i%255) + "," + (i%255) + ")";
           node.render = function() {
             this.composer.renderer.context.fillStyle = node.color ;
             this.composer.renderer.context.fillRect(node.getPos().x,
                                                     node.getPos().y,
                                                     node.getSize().width,
                                                     node.getSize().height);
+            this.composer.renderer.context.fillStyle = "#FFFFFF";
+            this.composer.renderer.context.fillText("z: " + node.z, node.x+10, node.y+10);
           };
         }
         
