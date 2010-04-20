@@ -10,49 +10,43 @@
       jQuery(function() {
         jQuery("canvas").attr("width", jQuery(document).width());
         jQuery("canvas").attr("height", jQuery(document).height());
-        var instance = Composer(document.getElementById("example1"), {fps: 30});
+        var instance = Composer(document.getElementById("example1"), {fps: 30}, [Composer.Renderer, Composer.DragManager]);
+        Composer.Renderer(instance);
         instance.renderer.start();
         
-        node = Composer.create({}, [Composer.Renderable, Composer.Collidable]);
-        node.setSize(100,100).setPos(10,10,0);
+        var canvasWidth = jQuery("canvas").attr("width");
+        var size= 200;
+        var total = (canvasWidth/size * canvasWidth/size);
+alert(total);
+        function createNode(i) {
+          var width =  jQuery("canvas").attr("width")/size;
+          var x      = i%jQuery("canvas").attr("width");
+          var y      = Math.floor(i/jQuery("canvas").attr("width"))*size;
+          
+          
+          var node = Composer.create({}, [Composer.Renderable, Composer.Collidable, Composer.Draggable]);
+          node.setSize(size,size).setPos(x,y,0);
         
-        node.drag = false;
-        var mx=0,my=0;
-        function calcMouse(ev) {
-          mx = ev.clientX - (instance.canvas.offsetLeft - window.pageXOffset);
-          my = ev.clientY - (instance.canvas.offsetTop  - window.pageYOffset);
+          node.color = "rgb(" +  (i%127) + "," + Math.floor(Math.random()*255)%255 + "," + (i%255) + ")";
+          node.render = function() {
+            this.composer.renderer.context.fillStyle = node.color ;
+            this.composer.renderer.context.fillRect(node.getPos().x,
+                                                    node.getPos().y,
+                                                    node.getSize().width,
+                                                    node.getSize().height);
+          };
         }
         
-        node.render = function() {
-          
-          if (node.drag) {
-            node.setPos(mx - node.drag.x,
-                        my - node.drag.y);
-          }
-          
-          this.composer.renderer.context.fillStyle = "#FFFFFF";
-          this.composer.renderer.context.fillRect(node.getPos().x,
-                                                  node.getPos().y,
-                                                  node.getSize().width,
-                                                  node.getSize().height);
-        };
+        for (var i=0; i<total; i++)
+        {
+          createNode(i*size);
+        }
         
-        jQuery(document).mousedown(function(ev) {
-          if (node.collides.aabb(mx, my)) {
-            node.drag = {x:mx-node.getPos().x, y:my-node.getPos().y};
-          }
-        });
-        
-        jQuery(document).mouseup(function(ev) {
-            node.drag = false;
-        });
-        
-        jQuery(document).mousemove(calcMouse);
         
       });
     </script>
   </head>
   <body>
-      <canvas id="example1" width="600" height="300"></canvas>
+      <canvas id="example1" width="300" height="300"></canvas>
   </body>
 </html>

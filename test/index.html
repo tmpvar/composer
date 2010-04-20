@@ -53,10 +53,10 @@
 
         asyncTest("As a developer I need Composer's renderer to render consistently", 3, function() {
           var instance   = Composer(jQuery("<canvas></canvas>")[0]),
-              first  = Composer.create({}, [Composer.Renderable]),
-              second = Composer.create({}, [Composer.Renderable]),
+              first  = Composer.create({}, null, [Composer.Renderable]),
+              second = Composer.create({}, null, [Composer.Renderable]),
               lastRendered = null;
-
+          Composer.Renderer(instance);
           first.setPos(0,0,5);
           second.setPos(0,0,6);
 
@@ -66,11 +66,13 @@
             ok(lastRendered === null, "Renderables with a lower Z index are rendered first");
             lastRendered = first;
             instance.renderer.stop();
+            start();
           }
 
           second.render = function() {
             ok(lastRendered === first, "Renderer properly sorted and rendered two renderables");
             start();
+            instance.renderer.stop();
           };
 
           instance.renderer.add(second).add(first);
