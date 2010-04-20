@@ -10,7 +10,28 @@
       jQuery(function() {
         jQuery("canvas").attr("width", jQuery(document).width());
         jQuery("canvas").attr("height", jQuery(document).height());
-        var instance = Composer(document.getElementById("example1"), {fps: 30}, [Composer.Renderer, Composer.DragManager]);
+        var instance = Composer(document.getElementById("example1"), {fps: 30}, 
+                                [
+                                  Composer.Renderable, 
+                                  Composer.Renderer, 
+                                  Composer.DragManager, 
+                                  Composer.Collidable, 
+                                  Composer.Draggable]);
+        
+        window.example1 = instance;
+
+        instance.setPos(0,0,-1).setSize(jQuery("canvas").attr("width"), jQuery("canvas").attr("height"));
+        instance.dragstart = function(ev) {
+          instance.z = -10;
+          var ox = ev.canvasOffset.x-instance.x, oy = ev.canvasOffset.y-instance.y;
+          instance.mouseOffset = {x:ox, y:oy};
+        };
+        
+        instance.dragging = function(ev) {
+          var ox = ev.canvasOffset.x-instance.mouseOffset.x, oy = ev.canvasOffset.y-instance.mouseOffset.y;
+          instance.setPos(ox, oy, -10);
+        };
+        
         Composer.Renderer(instance);
         instance.renderer.start();
         
@@ -25,14 +46,17 @@
           node.setSize(size,size).setPos(x,y,z);
 
           node.color = color || "rgb(" +  (x%255) + "," + (y%127) + "," + (y%255) + ")";
-          node.render = function() {
+          node.render = function(data) {
+            var x = node.x+data.relativeX, y = node.y + data.relativeY;
             this.composer.renderer.context.fillStyle = node.color ;
-            this.composer.renderer.context.fillRect(node.getPos().x,
-                                                    node.getPos().y,
+            this.composer.renderer.context.fillRect(x,
+                                                    y,
                                                     node.getSize().width,
                                                     node.getSize().height);
             this.composer.renderer.context.fillStyle = "#FFFFFF";
-            this.composer.renderer.context.fillText("z: " + node.z, node.x+10, node.y+10);
+            this.composer.renderer.context.fillText("z: " + node.z, x+10, y+10);
+            
+            this.composer.renderer.context.fillText("" + node.id, x+15, y+25);
           };
         }
         
@@ -50,7 +74,6 @@
             case 78:
               if (ev.ctrlKey) {
                 green+=10
-                console.log("rgb(" + (green*2%255) + "," + (green%127) + "," + (green%255) + ")");
                 createNode(100, 100, green/10, "rgb(" + (green*2%255) + "," + (green%127) + "," + (green%255) + ")");
               }
             break;
