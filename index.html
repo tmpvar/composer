@@ -24,12 +24,6 @@
         instance.dragstart = function(ev) {
           instance.z = -10;
           var ox = ev.canvasOffset.x-instance.x, oy = ev.canvasOffset.y-instance.y;
-          
-          if (instance.hasOwnProperty('x') && instance.hasOwnProperty('y')) {
-            //ox += instance.x;
-            //oy += instance.y;
-          }
-
           instance.mouseOffset = {x:ox, y:oy};
         };
         
@@ -64,18 +58,17 @@
           node.setSize(size,size).setPos(x,y,z);
 
           node.color = color || "rgb(" +  (x%255) + "," + (y%127) + "," + (y%255) + ")";
+          var x,y,nsize, context = instance.renderer.context;
           node.render = function(data) {
             nodesRendered++;
-            var x = node.x+data.relativeX, y = node.y + data.relativeY;
-            this.composer.renderer.context.fillStyle = node.color ;
-            this.composer.renderer.context.fillRect(x,
-                                                    y,
-                                                    node.getSize().width,
-                                                    node.getSize().height);
-            this.composer.renderer.context.fillStyle = "#FFFFFF";
-            this.composer.renderer.context.fillText("z: " + node.z, x+10, y+10);
-            
-            this.composer.renderer.context.fillText("" + node.id, x+15, y+25);
+            x = node.x + data.relativeX;
+            y = node.y + data.relativeY;
+            nsize = node.getSize();
+            context.fillStyle = node.color;
+            context.fillRect(x, y, nsize.width, nsize.height);
+            context.fillStyle = "#FFFFFF";
+            context.fillText("z: " + node.z, x+10, y+10);
+            context.fillText("" + node.id, x+15, y+25);
           };
         }
         
