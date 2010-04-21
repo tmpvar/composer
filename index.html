@@ -39,7 +39,19 @@
         };
         
         Composer.Renderer(instance);
-        instance.renderer.start();
+        
+        var renders = 0, fps = 0, seconds=0, nodesRendered = 0;
+        
+        setInterval(function() {
+          seconds+=.2;
+          fps = renders/seconds;
+          document.title = "Composer (" + nodesRendered + " @ " + Math.ceil(fps) + "fps)";
+        },200)
+        
+        instance.renderer.start(function() {
+          renders++;
+          nodesRendered = 0;
+        });
         
         var canvasWidth = jQuery("canvas").attr("width"),
             size  = 200,
@@ -53,6 +65,7 @@
 
           node.color = color || "rgb(" +  (x%255) + "," + (y%127) + "," + (y%255) + ")";
           node.render = function(data) {
+            nodesRendered++;
             var x = node.x+data.relativeX, y = node.y + data.relativeY;
             this.composer.renderer.context.fillStyle = node.color ;
             this.composer.renderer.context.fillRect(x,
