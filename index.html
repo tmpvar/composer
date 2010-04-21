@@ -43,10 +43,10 @@
         var renders = 0, fps = 0, seconds=0, nodesRendered = 0;
         
         setInterval(function() {
-          seconds+=.2;
-          fps = renders/seconds;
-          document.title = "Composer (" + nodesRendered + " @ " + Math.ceil(fps) + "fps)";
-        },200)
+          fps = renders;
+          renders = 0;
+          document.title = "Composer (" + nodesRendered + " @ " + Math.ceil(fps) + " fps)";
+        },1000)
         
         instance.renderer.start(function() {
           renders++;
@@ -54,7 +54,7 @@
         });
         
         var canvasWidth = jQuery("canvas").attr("width"),
-            size  = 200,
+            size  = 50,
             total = (canvasWidth/size * canvasWidth/size),
             width =  jQuery("canvas").attr("width")/size;
         
