@@ -80,6 +80,10 @@
           createNode(x,y,0);
         }
         
+        // Preload
+        var radialMenu = new Image();
+        radialMenu.src = "./image/pie.png";
+        
         // TODO: refactor into core
         var green = 0;
         document.addEventListener("keydown", function(ev) {
@@ -90,6 +94,24 @@
                 createNode(100, 100, "rgb(" + (green*2%255) + "," + (green%127) + "," + (green%255) + ")");
               }
             break;
+            
+            case 32:
+              
+              //if (ev.ctrlKey) {
+                ev.preventDefault();
+                ev.stopPropagation();
+                var radial = Composer.create({}, [Composer.Renderable, Composer.Collidable]);
+
+                radial.setSize(200,200).setPos(instance.canvas.width/2-100,instance.canvas.height/2 - 100,1000);
+                radial.dirty = true;
+                var x,y,nsize, context = instance.renderer.context;
+                radial.render = function(data) {
+                  nodesRendered++;
+                  context.drawImage(radialMenu, radial.x, radial.y);
+                };
+              //}
+              return false;
+            break
           }
         }, true);
         
