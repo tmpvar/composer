@@ -53,10 +53,10 @@
             width =  jQuery("canvas").attr("width")/size;
         
         // TODO: move this into core, probably into a "NodeBuilder" feature/part    
-        function createNode(x,y,z,color) {
+        function createNode(x,y,color) {
           var node = Composer.create({}, [Composer.Renderable, Composer.Collidable, Composer.Draggable]);
-          node.setSize(size,size).setPos(x,y,z);
-
+          node.setSize(size,size).setPos(x,y,0);
+          node.dirty = true;
           node.color = color || "rgb(" +  (x%255) + "," + (y%127) + "," + (y%255) + ")";
           var x,y,nsize, context = instance.renderer.context;
           node.render = function(data) {
@@ -69,6 +69,7 @@
             context.fillStyle = "#FFFFFF";
             context.fillText("z: " + node.z, x+10, y+10);
             context.fillText("" + node.id, x+15, y+25);
+            
           };
         }
         
@@ -86,7 +87,7 @@
             case 78:
               if (ev.ctrlKey) {
                 green+=10
-                createNode(100, 100, green/10, "rgb(" + (green*2%255) + "," + (green%127) + "," + (green%255) + ")");
+                createNode(100, 100, "rgb(" + (green*2%255) + "," + (green%127) + "," + (green%255) + ")");
               }
             break;
           }
