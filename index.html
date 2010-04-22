@@ -101,11 +101,15 @@
                 ev.preventDefault();
                 ev.stopPropagation();
                 var radial = Composer.create({}, [Composer.Renderable, Composer.Collidable]);
-                radial.setSize(200,200).setPos(instance.canvas.width/2-100,instance.canvas.height/2 - 100,1000);
-                var x,y,nsize, context = instance.renderer.context;
+                radial.setSize(radialMenu.width,radialMenu.height);
+                radial.setPos(Math.floor(instance.canvas.width/2-100),Math.floor(instance.canvas.height/2 - 100),1000);
+                var context = instance.renderer.context;
                 radial.render = function(data) {
                   nodesRendered++;
                   context.drawImage(radialMenu, radial.x, radial.y);
+                  context.fillStyle = "#FFFFFF";
+                  context.fillText("z: " + radial.z, radial.x+10, radial.y+10);
+                  context.fillText("" + radial.id, radial.x+15, radial.y+25);
                 };
               //}
               return false;
