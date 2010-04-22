@@ -101,9 +101,7 @@
                 ev.preventDefault();
                 ev.stopPropagation();
                 var radial = Composer.create({}, [Composer.Renderable, Composer.Collidable]);
-
                 radial.setSize(200,200).setPos(instance.canvas.width/2-100,instance.canvas.height/2 - 100,1000);
-                radial.dirty = true;
                 var x,y,nsize, context = instance.renderer.context;
                 radial.render = function(data) {
                   nodesRendered++;
