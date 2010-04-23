@@ -21,15 +21,27 @@
         window.example1 = instance;
 
         instance.setPos(0,0,-1).setSize(jQuery("canvas").attr("width"), jQuery("canvas").attr("height"));
+        
         instance.dragstart = function(ev) {
-          instance.z = -10;
           var ox = ev.canvasOffset.x-instance.x, oy = ev.canvasOffset.y-instance.y;
+          instance.z = -10;
           instance.mouseOffset = {x:ox, y:oy};
         };
-        
+
         instance.dragging = function(ev) {
           var ox = ev.canvasOffset.x-instance.mouseOffset.x, oy = ev.canvasOffset.y-instance.mouseOffset.y;
-          instance.setPos(ox, oy, -10);
+
+          if (instance.composer === instance) {
+            instance.composer.renderer.dirty = true;
+          }
+
+          instance.dirty = true;
+          instance.x = ox;
+          instance.y = oy;
+        };
+
+        instance.dragend = function(ev) {
+          instance.mouseOffset = {x:0, y:0};
         };
         
         Composer.Renderer(instance);
