@@ -68,10 +68,13 @@
         function createNode(x,y,color) {
           var node = Composer.create({}, [Composer.Renderable, Composer.Collidable, Composer.Draggable]);
           node.setSize(size,size).setPos(x,y,0);
+          node.composer.renderer.dirty = true;
           node.dirty = true;
           node.color = color || "rgb(" +  (x%255) + "," + (y%127) + "," + (y%255) + ")";
           var x,y,nsize, context = instance.renderer.context;
+          
           node.render = function(data) {
+
             nodesRendered++;
             x = node.x + data.relativeX;
             y = node.y + data.relativeY;
@@ -98,32 +101,30 @@
         
         // TODO: refactor into core
         var green = 0;
-        document.addEventListener("keydown", function(ev) {
-          switch (ev.keyCode) {
-            case 78:
-              if (ev.ctrlKey) {
-                green+=10
-                createNode(100, 100, "rgb(" + (green*2%255) + "," + (green%127) + "," + (green%255) + ")");
-              }
+        document.addEventListener("keypress", function(ev) {
+          switch (ev.charCode) {
+            case 110:
+              ev.preventDefault();
+              ev.stopPropagation();
+              green+=10
+              createNode(100, 100, "rgb(" + (green*2%255) + "," + (green%127) + "," + (green%255) + ")");
             break;
             
             case 32:
-              
-              //if (ev.ctrlKey) {
-                ev.preventDefault();
-                ev.stopPropagation();
-                var radial = Composer.create({}, [Composer.Renderable, Composer.Collidable]);
-                radial.setSize(radialMenu.width,radialMenu.height);
-                radial.setPos(Math.floor(instance.canvas.width/2-100),Math.floor(instance.canvas.height/2 - 100),1000);
-                var context = instance.renderer.context;
-                radial.render = function(data) {
-                  nodesRendered++;
-                  context.drawImage(radialMenu, radial.x, radial.y);
-                  context.fillStyle = "#FFFFFF";
-                  context.fillText("z: " + radial.z, radial.x+10, radial.y+10);
-                  context.fillText("" + radial.id, radial.x+15, radial.y+25);
-                };
-              //}
+              ev.preventDefault();
+              ev.stopPropagation();
+              var radial = Composer.create({}, [Composer.Renderable, Composer.Collidable]);
+              radial.setSize(radialMenu.width,radialMenu.height);
+              radial.setPos(Math.floor(instance.canvas.width/2-100),Math.floor(instance.canvas.height/2 - 100),1000);
+              var context = instance.renderer.context;
+              radial.composer.renderer.dirty = true;
+              radial.render = function(data) {
+                nodesRendered++;
+                context.drawImage(radialMenu, radial.x, radial.y);
+                context.fillStyle = "#FFFFFF";
+                context.fillText("z: " + radial.z, radial.x+10, radial.y+10);
+                context.fillText("" + radial.id, radial.x+15, radial.y+25);
+              };
               return false;
             break
           }
