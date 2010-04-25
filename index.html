@@ -72,7 +72,7 @@
           node.dirty = true;
           node.color = color || "rgb(" +  (x%255) + "," + (y%127) + "," + (y%255) + ")";
           var x,y,nsize, context = instance.renderer.context;
-          
+          node.composer.trigger("node.z.changed", { source: node });
           node.render = function(data) {
 
             nodesRendered++;
@@ -90,8 +90,8 @@
         
         for (var i=0; i<total; i++)
         { 
-          var base = i*size;
-          var x = base%canvasWidth, y = Math.floor(base/canvasWidth)*size;
+          var base = i*(size+1);
+          var x = base%canvasWidth, y = Math.floor(base/canvasWidth)*(size + 1);
           createNode(x,y,0);
         }
         
