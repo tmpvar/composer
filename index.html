@@ -66,34 +66,38 @@
         
         // TODO: move this into core, probably into a "NodeBuilder" feature/part    
         function createNode(x,y,color) {
-          var node = Composer.create({}, [Composer.Renderable, Composer.Collidable, Composer.Draggable]);
+          var node = instance.create({}, [Composer.Renderable, Composer.Collidable, Composer.Draggable, Composer.Renderer]);
           node.setSize(size,size).setPos(x,y,0);
           node.composer.renderer.dirty = true;
           node.dirty = true;
           node.color = color || "rgb(" +  (x%255) + "," + (y%127) + "," + (y%255) + ")";
-          var x,y,nsize, context = instance.renderer.context;
+          var x,y,nsize, context = instance.context;
           node.composer.trigger("node.z.changed", { source: node });
           node.render = function(data) {
-
+            var ri=0, rl=node.renderer.stack.length;
+            for (ri; ri<rl; ri++) {
+              node.stack[ri].dirty = false;
+              node.stack[ri].render(data);
+            }
+            
+            
             nodesRendered++;
             x = node.x + data.relativeX;
             y = node.y + data.relativeY;
             nsize = node.getSize();
-            context.fillStyle = node.color;
-            context.fillRect(x, y, nsize.width, nsize.height);
-            context.fillStyle = "#FFFFFF";
-            context.fillText("z: " + node.z, x+10, y+10);
-            context.fillText("" + node.id, x+15, y+25);
+            node.composer.context.fillStyle = "#FFFFFF";
+            node.composer.context.fillRect(x, y, nsize.width, nsize.height);
+            node.composer.context.fillStyle = "#000000";
+            node.composer.context.fillText("z: " + node.z, x+10, y+10);
+            node.composer.context.fillText("" + node.id, x+15, y+25);
             
           };
         }
         
-        for (var i=0; i<total; i++)
-        { 
-          var base = i*(size+1);
-          var x = base%canvasWidth, y = Math.floor(base/canvasWidth)*(size + 1);
-          createNode(x,y,0);
-        }
+        
+        createNode(10,10,0);
+        
+        createNode(200,10,0);
         
         // Preload
         var radialMenu = new Image();
@@ -116,14 +120,14 @@
               var radial = Composer.create({}, [Composer.Renderable, Composer.Collidable]);
               radial.setSize(radialMenu.width,radialMenu.height);
               radial.setPos(Math.floor(instance.canvas.width/2-100),Math.floor(instance.canvas.height/2 - 100),1000);
-              var context = instance.renderer.context;
+              var context = instance.context;
               radial.composer.renderer.dirty = true;
               radial.render = function(data) {
                 nodesRendered++;
-                context.drawImage(radialMenu, radial.x, radial.y);
-                context.fillStyle = "#FFFFFF";
-                context.fillText("z: " + radial.z, radial.x+10, radial.y+10);
-                context.fillText("" + radial.id, radial.x+15, radial.y+25);
+                obj.composer.context.drawImage(radialMenu, radial.x, radial.y);
+                obj.composer.context.fillStyle = "#FFFFFF";
+                obj.composer.context.fillText("z: " + radial.z, radial.x+10, radial.y+10);
+                obj.composer.context.fillText("" + radial.id, radial.x+15, radial.y+25);
               };
               return false;
             break
