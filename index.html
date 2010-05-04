@@ -52,7 +52,7 @@
           fps = renders;
           renders = 0;
           document.title = "Composer (" + nodesRendered + " @ " + Math.ceil(fps) + " fps)";
-        },1000)
+        },1000);
         
         instance.renderer.start(function() {
           renders++;
@@ -63,7 +63,7 @@
             size  = 100,
             total = (canvasWidth/size * canvasWidth/size),
             width =  jQuery("canvas").attr("width")/size,
-            context = instance.context;
+            context = instance.context, x, y, nsize;
         
         // TODO: move this into core, probably into a "NodeBuilder" feature/part    
         function createNode(x,y,color) {
@@ -72,7 +72,7 @@
           node.composer.renderer.dirty = true;
           node.dirty = true;
           node.color = color || "rgb(" +  (x%255) + "," + (y%127) + "," + (y%255) + ")";
-          var x,y,nsize;
+          
           node.render = function(data) {
             nodesRendered++;
             x = node.x + data.relativeX;
@@ -91,8 +91,8 @@
         for (var i=0; i<total; i++)
         { 
           var base = i*size;
-          var x = base%canvasWidth, y = Math.floor(base/canvasWidth)*size;
-          createNode(x,y,0);
+          var nodex = base%canvasWidth, nodey = Math.floor(base/canvasWidth)*size;
+          createNode(nodex, nodey, 0);
         }
         
         // Preload
@@ -106,7 +106,7 @@
             case 110:
               ev.preventDefault();
               ev.stopPropagation();
-              green+=10
+              green+=10;
               createNode(100, 100, "rgb(" + (green*2%255) + "," + (green%127) + "," + (green%255) + ")");
             break;
             
@@ -120,17 +120,15 @@
               radial.composer.renderer.dirty = true;
               radial.render = function(data) {
                 nodesRendered++;
-                obj.composer.context.drawImage(radialMenu, radial.x, radial.y);
-                obj.composer.context.fillStyle = "#FFFFFF";
-                obj.composer.context.fillText("z: " + radial.z, radial.x+10, radial.y+10);
-                obj.composer.context.fillText("" + radial.id, radial.x+15, radial.y+25);
+                instance.composer.context.drawImage(radialMenu, radial.x, radial.y);
+                instance.composer.context.fillStyle = "#FFFFFF";
+                instance.composer.context.fillText("z: " + radial.z, radial.x+10, radial.y+10);
+                instance.composer.context.fillText("" + radial.id, radial.x+15, radial.y+25);
               };
-              return false;
             break
           }
+          return false;
         }, true);
-        
-        
       });
     </script>
   </head>
