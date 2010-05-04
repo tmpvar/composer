@@ -62,42 +62,37 @@
         var canvasWidth = jQuery("canvas").attr("width"),
             size  = 100,
             total = (canvasWidth/size * canvasWidth/size),
-            width =  jQuery("canvas").attr("width")/size;
+            width =  jQuery("canvas").attr("width")/size,
+            context = instance.context;
         
         // TODO: move this into core, probably into a "NodeBuilder" feature/part    
         function createNode(x,y,color) {
-          var node = instance.create({}, [Composer.Renderable, Composer.Collidable, Composer.Draggable, Composer.Renderer]);
+          var node = Composer.create({}, [Composer.Renderable, Composer.Collidable, Composer.Draggable]);
           node.setSize(size,size).setPos(x,y,0);
-          node.composer.renderer.dirty = true;
           node.dirty = true;
           node.color = color || "rgb(" +  (x%255) + "," + (y%127) + "," + (y%255) + ")";
-          var x,y,nsize, context = instance.context;
-          node.composer.trigger("node.z.changed", { source: node });
+          var x,y,nsize;
           node.render = function(data) {
-            var ri=0, rl=node.renderer.stack.length;
-            for (ri; ri<rl; ri++) {
-              node.stack[ri].dirty = false;
-              node.stack[ri].render(data);
-            }
-            
-            
             nodesRendered++;
             x = node.x + data.relativeX;
             y = node.y + data.relativeY;
             nsize = node.getSize();
-            node.composer.context.fillStyle = "#FFFFFF";
-            node.composer.context.fillRect(x, y, nsize.width, nsize.height);
-            node.composer.context.fillStyle = "#000000";
-            node.composer.context.fillText("z: " + node.z, x+10, y+10);
-            node.composer.context.fillText("" + node.id, x+15, y+25);
+            context.fillStyle = node.color;
+            context.fillRect(x, y, nsize.width, nsize.height);
+            context.fillStyle = "#FFFFFF";
+            context.fillText("z: " + node.z, x+10, y+10);
+            context.fillText("" + node.id, x+15, y+25);
             
           };
         }
         
         
-        createNode(10,10,0);
-        
-        createNode(200,10,0);
+        for (var i=0; i<total; i++)
+        { 
+          var base = i*size;
+          var x = base%canvasWidth, y = Math.floor(base/canvasWidth)*size;
+          createNode(x,y,0);
+        }
         
         // Preload
         var radialMenu = new Image();
