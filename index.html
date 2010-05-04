@@ -69,6 +69,7 @@
         function createNode(x,y,color) {
           var node = Composer.create({}, [Composer.Renderable, Composer.Collidable, Composer.Draggable]);
           node.setSize(size,size).setPos(x,y,0);
+          node.composer.renderer.dirty = true;
           node.dirty = true;
           node.color = color || "rgb(" +  (x%255) + "," + (y%127) + "," + (y%255) + ")";
           var x,y,nsize;
