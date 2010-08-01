@@ -5,135 +5,72 @@
     <style>
       body { margin:0px; padding:0px;}
     </style>
+    <script type="text/javascript" src="../carena/lib/carena.js"></script>
     <script type="text/javascript" src="lib/composer.js"></script>
+
     <script src="lib/jquery.js"></script>
     <script type="text/javascript">
       jQuery(function() {
-        jQuery("canvas").attr("width", jQuery(document).width());
-        jQuery("canvas").attr("height", jQuery(document).height());
-        var instance = Composer(document.getElementById("example1"), {fps: 30}, 
-                                [
-                                  Composer.Renderable, 
-                                  Composer.Renderer, 
-                                  Composer.DragManager, 
-                                  Composer.Collidable, 
-                                  Composer.Draggable]);
-        
-        window.example1 = instance;
 
-        instance.setPos(0,0,-1).setSize(jQuery("canvas").attr("width"), jQuery("canvas").attr("height"));
-        
-        instance.dragstart = function(ev) {
-          var ox = ev.canvasOffset.x-instance.x, oy = ev.canvasOffset.y-instance.y;
-          instance.z = -10;
-          instance.mouseOffset = {x:ox, y:oy};
-        };
+        var feature = carena.feature,
+            renderer = carena.Build({}, [feature.Renderer], {
+              canvas: document.getElementById("composer")
+            }),
+            camera = carena.Build({}, [feature.Camera, feature.DropManager], {
+              renderer: renderer
+            }),
+            BaseNode = carena.Design({}, [
+              feature.Node,
+              feature.Draggable
+            ]),
+            scene     = window.scene = BaseNode();
+            node1     = BaseNode(),
+            node1port = BaseNode({}, [
+              feature.RelativeToParent,
+              composer.feature.Port
+            ]),
+            node2     = BaseNode(),
+            node2port = BaseNode({}, [
+              feature.RelativeToParent,
+              feature.DropTarget,
+              composer.feature.Port
+            ]);
+            scene.event.bind("mouse.*", function(name, data) {
+              console.log(name + ": " + data.target.color);
+            });
 
-        instance.dragging = function(ev) {
-          var ox = ev.canvasOffset.x-instance.mouseOffset.x, oy = ev.canvasOffset.y-instance.mouseOffset.y;
+            // Hook it all up
+            camera.target = scene;
 
-          if (instance.composer === instance) {
-            instance.composer.renderer.dirty = true;
-          }
+            node1.width = node1.height = 100;
+            node1.x     = node1.y      = 0;
+            node1.color = "darkgrey";
 
-          instance.dirty = true;
-          instance.x = ox;
-          instance.y = oy;
-        };
+            node1port.width = node1port.height = 20;
+            node1port.x = node1port.y = 80;
+            node1port.color = "green";
 
-        instance.dragend = function(ev) {
-          instance.mouseOffset = {x:0, y:0};
-        };
-        
-        Composer.Renderer(instance);
-        
-        var renders = 0, fps = 0, seconds=0, nodesRendered = 0;
-        
-        setInterval(function() {
-          fps = renders;
-          renders = 0;
-          document.title = "Composer (" + nodesRendered + " @ " + Math.ceil(fps) + " fps)";
-        },1000);
-        
-        instance.renderer.start(function() {
-          renders++;
-          nodesRendered = 0;
-        });
-        
-        var canvasWidth = jQuery("canvas").attr("width"),
-            size  = 100,
-            total = (canvasWidth/size * canvasWidth/size),
-            width =  jQuery("canvas").attr("width")/size,
-            context = instance.context, x, y, nsize;
-        
-        // TODO: move this into core, probably into a "NodeBuilder" feature/part    
-        function createNode(x,y,color) {
-          var node = Composer.create({}, [Composer.Renderable, Composer.Collidable, Composer.Draggable]);
-          node.setSize(size,size).setPos(x,y,0);
-          node.composer.renderer.dirty = true;
-          node.dirty = true;
-          node.color = color || "rgb(" +  (x%255) + "," + (y%127) + "," + (y%255) + ")";
-          
-          node.render = function(data) {
-            nodesRendered++;
-            x = node.x + data.relativeX;
-            y = node.y + data.relativeY;
-            nsize = node.getSize();
-            context.fillStyle = node.color;
-            context.fillRect(x, y, nsize.width, nsize.height);
-            context.fillStyle = "#FFFFFF";
-            context.fillText("z: " + node.z, x+10, y+10);
-            context.fillText("" + node.id, x+15, y+25);
-            
-          };
-        }
-        
-        
-        for (var i=0; i<total; i++)
-        { 
-          var base = i*size;
-          var nodex = base%canvasWidth, nodey = Math.floor(base/canvasWidth)*size;
-          createNode(nodex, nodey, 0);
-        }
-        
-        // Preload
-        var radialMenu = new Image();
-        radialMenu.src = "./image/pie.png";
-        
-        // TODO: refactor into core
-        var green = 0;
-        document.addEventListener("keypress", function(ev) {
-          switch (ev.charCode) {
-            case 110:
-              ev.preventDefault();
-              ev.stopPropagation();
-              green+=10;
-              createNode(100, 100, "rgb(" + (green*2%255) + "," + (green%127) + "," + (green%255) + ")");
-            break;
-            
-            case 32:
-              ev.preventDefault();
-              ev.stopPropagation();
-              var radial = Composer.create({}, [Composer.Renderable, Composer.Collidable]);
-              radial.setSize(radialMenu.width,radialMenu.height);
-              radial.setPos(Math.floor(instance.canvas.width/2-100),Math.floor(instance.canvas.height/2 - 100),1000);
-              var context = instance.context;
-              radial.composer.renderer.dirty = true;
-              radial.render = function(data) {
-                nodesRendered++;
-                instance.composer.context.drawImage(radialMenu, radial.x, radial.y);
-                instance.composer.context.fillStyle = "#FFFFFF";
-                instance.composer.context.fillText("z: " + radial.z, radial.x+10, radial.y+10);
-                instance.composer.context.fillText("" + radial.id, radial.x+15, radial.y+25);
-              };
-            break
-          }
-          return false;
-        }, true);
+            node2.width = node2.height = 100;
+            node2.x     = node2.y      = 200;
+            node2.color = "darkgrey";
+
+            node2port.width = node2port.height = 20;
+            node2port.x = node2port.y = 200;
+            node2port.color = "red";
+            node2port.dropend = function(node, data){
+              node2port.add(node);
+            };
+
+            scene.add(node1.add(node1port)).add(node2.add(node2port));
+
+            setTimeout(function render() {
+              camera.render();
+              setTimeout(render, 0);
+            }, 0);
       });
     </script>
   </head>
   <body>
-      <canvas id="example1" width="300" height="300"></canvas>
+      <canvas id="composer" width="300" height="300"></canvas>
   </body>
 </html>
