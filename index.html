@@ -7,6 +7,7 @@
     </style>
     <script type="text/javascript" src="../carena/lib/carena.js"></script>
     <script type="text/javascript" src="lib/composer.js"></script>
+    <script type="text/javascript" src="../cider/lib/cider.js"></script>
 
     <script src="lib/jquery.js"></script>
     <script type="text/javascript">
@@ -21,7 +22,8 @@
             }),
             BaseNode = carena.Design({}, [
               feature.Node,
-              feature.Draggable
+              feature.Draggable,
+              feature.RelativeToParent
             ]),
             scene     = window.scene = BaseNode();
             node1     = BaseNode(),
@@ -35,9 +37,6 @@
               feature.DropTarget,
               composer.feature.Port
             ]);
-            scene.event.bind("mouse.*", function(name, data) {
-//              console.log(name + ": " + data.target.color);
-            });
 
             // Hook it all up
             camera.target = scene;
@@ -61,6 +60,12 @@
               node2port.add(node);
             };
 
+            var menuNode = BaseNode();
+            menuNode.height = 20;
+            menuNode.color = "grey";
+            menuNode.width = renderer.canvas.width;
+            camera.add(menuNode);
+
             scene.add(node1.add(node1port)).add(node2.add(node2port));
 
             setTimeout(function render() {
@@ -71,6 +76,6 @@
     </script>
   </head>
   <body>
-      <canvas id="composer" width="300" height="300"></canvas>
+      <canvas id="composer" width="600" height="600"></canvas>
   </body>
 </html>
