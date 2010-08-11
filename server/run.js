@@ -10,6 +10,7 @@ mongo.model('Flow',{
 Flow = db.model('Flow');
 
 connect.createServer.apply(connect, [
+  connect.logger(),
   connect.bodyDecoder(),
   connect.router(function(app) {
     app.get("/flows/:name", function(req, res, next) {
@@ -35,5 +36,6 @@ connect.createServer.apply(connect, [
     });
 
   }),
-  connect.staticProvider(__dirname + '/www/')
+  connect.staticProvider(__dirname + '/../'),
+  connect.staticProvider(__dirname + '/../../')
 ]).listen(3000);

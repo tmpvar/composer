@@ -36,6 +36,11 @@
               feature.RelativeToParent,
               feature.DropTarget,
               composer.feature.Port
+            ]),
+            node2port2 = BaseNode({}, [
+              feature.RelativeToParent,
+              feature.DropTarget,
+              composer.feature.Port
             ]);
 
             // Hook it all up
@@ -60,18 +65,55 @@
               node2port.add(node);
             };
 
+            node2port2.width = node2port2.height = 20;
+            node2port2.x = 280;
+            node2port2.y = 200;
+            node2port2.color = "orange";
+            node2port2.dropend = function(node, data){
+              node2port2.add(node);
+            };
+
             var menuNode = BaseNode();
             menuNode.height = 20;
             menuNode.color = "grey";
             menuNode.width = renderer.canvas.width;
             camera.add(menuNode);
 
-            scene.add(node1.add(node1port)).add(node2.add(node2port));
+            scene.add(node1.add(node1port))
+              .add(node2.add(node2port).add(node2port2));
 
             setTimeout(function render() {
               camera.render();
-              setTimeout(render, 0);
+              setTimeout(render, 10);
             }, 0);
+
+            document.addEventListener("keydown", function(ev) {
+              if (ev.keyCode === 78 && ev.ctrlKey === true) {
+                ev.preventDefault();
+                // spawn a new carena
+                var editorWindow = BaseNode({
+                  color: "blue",
+                  x:100, y: 100,
+                  height: 400,
+                  width: 400
+                },[] /* TODO: fix me */),
+                editor       = carena.Build({
+                  x:110,y:150, width: 380, height: 340
+                }, [
+                  feature.Node,
+                  feature.RelativeToParent,
+                  cider.feature.Textual,
+                  cider.feature.Editable,
+                ]),
+                lineNumbers = carena.Build({},[
+                  cider.feature.LineNumbers,
+                  feature.RelativeToParent
+                ]);
+
+                scene.add(editorWindow.add(editor.add(lineNumbers)));
+              }
+            }, true);
+
       });
     </script>
   </head>
