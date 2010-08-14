@@ -1,4 +1,33 @@
-seNode = carena.Design({}, [
+{
+  features : {
+   "carena.feature" : "http://tmpvar.com/project/carena/lib/carena.js",
+   "composer.feature" : "http://tmpvar.com/project/composer/lib/composer.js"
+  },
+  scene : [
+    {
+      settings : {
+        x: 0,
+        y: 0,
+        width: 100,
+        height: 100,
+        color: "red"
+      },
+      children : [
+        {
+          settings : {},
+          children: [],
+        }
+      ],
+      features : [
+        "carena.feature.Node",
+        "carena.feature.Eventable"
+      ]
+    }
+  ]
+}
+
+
+BseNode = carena.Design({}, [
               feature.Node,
               feature.Draggable,
               feature.RelativeToParent
