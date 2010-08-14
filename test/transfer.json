@@ -1,0 +1,67 @@
+seNode = carena.Design({}, [
+              feature.Node,
+              feature.Draggable,
+              feature.RelativeToParent
+            ]),
+            scene     = window.scene = BaseNode();
+            node1     = BaseNode(),
+            node1port = BaseNode({}, [
+              feature.RelativeToParent,
+              composer.feature.Port
+            ]),
+            node2     = BaseNode(),
+            node2port = BaseNode({}, [
+              feature.RelativeToParent,
+              feature.DropTarget,
+              composer.feature.Port
+            ]),
+            node2port2 = BaseNode({}, [
+              feature.RelativeToParent,
+              feature.DropTarget,
+              composer.feature.Port
+            ]);
+
+            // Hook it all up
+            camera.target = scene;
+
+            node1.width = node1.height = 100;
+            node1.x     = node1.y      = 0;
+            node1.color = "darkgrey";
+
+            node1port.width = node1port.height = 20;
+            node1port.x = node1port.y = 80;
+            node1port.color = "green";
+
+            node2.width = node2.height = 100;
+            node2.x     = node2.y      = 200;
+            node2.color = "darkgrey";
+
+            node2port.width = node2port.height = 20;
+            node2port.x = node2port.y = 200;
+            node2port.color = "red";
+            node2port.dropend = function(node, data){
+              node2port.add(node);
+            };
+
+            node2port2.width = node2port2.height = 20;
+            node2port2.x = 280;
+            node2port2.y = 200;
+            node2port2.color = "orange";
+            node2port2.dropend = function(node, data){
+              node2port2.add(node);
+            };
+
+            var menuNode = BaseNode();
+            menuNode.height = 20;
+            menuNode.color = "grey";
+            menuNode.width = renderer.canvas.width;
+            camera.add(menuNode);
+
+            scene.add(node1.add(node1port))
+              .add(node2.add(node2port).add(node2port2));
+
+            setTimeout(function render() {
+              camera.render();
+              setTimeout(render, 10);
+            }, 0);
+
