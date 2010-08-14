@@ -93,31 +93,22 @@
                 features : {
                   "carena.feature" : "http://tmpvar.com/project/carena/lib/carena.js"
                 },
-                scene : []
+                scene : {}
               }, loc = scene;
 
-              branch.walk(function(node, callback) {
-                if (node) {
-                  console.log(callback(node));
-                  if (node.children && node.children.length > 0) {
-                    var l = node.children.length, i = 0;
-                    for (i; i<l; i++) {
-                      console.log("callback:",callback(node.children[i]));
-                    }
-                  }
-                }
-              },
-              function(node, walker) {
-                var transport = { settings: {} };
-                for (var p in node) {
+              function recurse(node) {
+                var transport = { settings: node.dehydrate() };
+                
+                /*for (var p in node) {
                   if (node.hasOwnProperty(p)) {
                     if (typeof node[p] !== 'function') {
                       transport.settings[p] = node[p];
                     }
                   }
-                }
+                }*/
                 return transport;
-              });
+              }
+              res.scene = recurse(branch);
               return res;
             };
 
