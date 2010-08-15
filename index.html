@@ -20,18 +20,23 @@
             camera = carena.build({}, ["carena.Camera", "carena.DropManager"], {
               renderer: renderer
             }),
-            scene = carena.build({}, ["carena.Node", "carena.Eventable"]);
+            scene;
 
             var fromTransport = function(obj) {
               var flow = carena.build({}, obj.scene.features, obj.scene.settings || {});
-              if (obj.scene.children && obj.scene.children.length > 0) {
-                for (var nodeIdx = 0; nodeIdx<obj.scene.children.length; nodeIdx++) {
-                  // build an array of node features
-                  var current = obj.scene.children[nodeIdx];
-                  flow.add(carena.build({}, current.features, current.settings || {}));
+
+              function recurse(node, data) {
+                if (data.children && data.children.length > 0) {
+                  for (var nodeIdx = 0; nodeIdx<data.children.length; nodeIdx++) {
+                    // build an array of node features
+                    var current = data.children[nodeIdx],
+                        built   = carena.build({}, current.features, current.settings || {});
+                    node.add(recurse(built, current));
+                  }
                 }
+                return node;
               }
-              return flow;
+              return recurse(flow, obj.scene);
             };
 
             var toTransport = function(branch) {
@@ -40,7 +45,7 @@
                   "carena.feature" : "http://tmpvar.com/project/carena/lib/carena.js"
                 },
                 scene : {}
-              }, loc = scene;
+              };
 
               function recurse(node) {
                 var transport = { 
@@ -51,7 +56,7 @@
                 if (node.children && node.children.length) {
                   children = [];
                   for (var i = 0; i<node.children.length; i++) {
-                    children.push(recurse(node.children[i]));
+                      children.push(recurse(node.children[i]));
                   }
                 }
                 
@@ -60,41 +65,53 @@
                 }
                 return transport;
               }
+              
               res.scene = recurse(branch);
               return res;
             };
 
-          jQuery.ajax({
-            url : "/flows/THEFLOW",
-            dataType: "json",
-            success : function(data) {
-              var saving = false;
-              var scene = fromTransport(JSON.parse(data));
-              
-              scene.event.bind("node.dirty", function() {
-                if (!saving) {
-                  saving = true;
-                  jQuery.ajax({
-                    type : "post",
-                    url  : "/flows/",
-                    data : JSON.stringify(toTransport(scene)),
-                    contentType : "application/json",
-                    success : function(data) {
-                      console.log(data);
-                      saving = false;
-                    }
-                  });
-                }
-              });
-
-              camera.target = scene;
-
-              setTimeout(function render() {
-                camera.render();
-                setTimeout(render, 10);
-              }, 0);
+            var saving = false;
+            function save() {
+              if (!saving) {
+                saving = true;
+                jQuery.ajax({
+                  type : "post",
+                  url  : "/flows/",
+                  data : JSON.stringify(toTransport(scene)),
+                  contentType : "application/json",
+                  success : function(data) {
+                    saving = false;
+                  }
+                });
+              }
             }
-          })
+
+            jQuery.ajax({
+              url : "/flows/THEFLOW",
+              dataType: "json",
+              success : function(data) {
+                scene = fromTransport(JSON.parse(data));
+                /*var child = carena.build({x:10, y:10, width:100,height:100, style : { backgroundColor:"blue" }}, [
+                  "carena.Node", "carena.Draggable"
+                ]);
+                scene.add(child);*/
+              },
+              error : function() {
+                scene = carena.build({x:10, y: 10, width: 160, height: 160, style : { backgroundColor:"red" }},
+                  ["carena.Node", "carena.Draggable"]
+                )
+              },
+              complete: function() {
+                scene.event.bind("node.dirty", save);
+
+                camera.target = scene;
+
+                setTimeout(function render() {
+                  camera.render();
+                  setTimeout(render, 10);
+                }, 0);
+              }
+            })
 
             document.addEventListener("keydown", function(ev) {
               if (ev.keyCode === 78 && ev.ctrlKey === true) {

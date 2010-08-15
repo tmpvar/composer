@@ -20,7 +20,7 @@ connect.createServer.apply(connect, [
           res.end(JSON.stringify({code: 404, body: "Not Found"}));
         } else {
           res.writeHead(200, {'Content-Type':'application/json'});
-          res.end(JSON.stringify(cursor.pop()));
+          res.end(JSON.stringify(cursor.pop(), null, "  "));
         }
       });
     });
