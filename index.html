@@ -17,7 +17,7 @@
             renderer = carena.build({}, ["carena.Renderer"], {
               canvas: document.getElementById("composer")
             }),
-            camera = carena.build({}, ["carena.Camera", "carena.DropManager"], {
+            camera = carena.build({}, ["carena.Camera", "carena.DragManager", "carena.DropManager"], {
               renderer: renderer
             }),
             scene;
@@ -102,7 +102,7 @@
                 scene.event.bind("mouse.down", function(name, data) {
                   selected = data.target;
                 });
-
+scene.event.bind("*", function(name) { console.log(name); });
                 camera.target = scene;
                 scene.dirty = true;
                 setTimeout(function render() {
