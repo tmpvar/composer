@@ -220,21 +220,41 @@
                     // Save to storage
 
                     // remove the editor
-                    if (editor.parent) {
-                      editor.parent.remove(editor);
+                    // TODO: figure out the root cause of this
+                    if (!editor.parent || !name.parent || !editorWindow.parent) {
+                      return;
                     }
-                    if (name.parent) {
-                      name.parent.remove(name);
-                    }
+                    jQuery.ajax({
+                      url: "/nodes/test",
+                      contentType: "application/json",
+                      type: "put",
+                      dataType : "json",
+                      data : JSON.stringify({
+                        name: "test",
+                        code: editor.toString()
+                      }),
+                      success : function() {
+                        editor.parent.remove(editor);
+                        name.parent.remove(name);
+                        editorWindow.parent.remove(editorWindow);
+                      }
+                    });
 
-                    if (editorWindow.parent) {
-                      editorWindow.parent.remove(editorWindow);
-                    }
+
                     return false;
                   }
                 }
                 saveButton.event.bind("mouse.up", mouseUp);
-                camera.add(editorWindow.add(editor.add(lineNumbers)).add(name).add(saveButton));
+                jQuery.ajax({
+                  url: "/nodes/test",
+                  dataType: "json",
+                  success: function(data) {
+                    var data = JSON.parse(data);
+                    editor.fromString(data.code);
+                    camera.add(editorWindow.add(editor.add(lineNumbers)).add(name).add(saveButton));
+                  }
+                });
+
               }
             }, true);
 

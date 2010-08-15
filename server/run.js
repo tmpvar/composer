@@ -4,11 +4,13 @@ var connect    = require("connect"),
     Flow, Node;
 
 mongo.model('Flow',{
+  collection : "flows",
   properties : ["name"],
   indexes    : ["name"]
 });
 mongo.model('Node', {
-  properties : ["name"],
+  collection : "nodes",
+  properties : ["name", "code"],
   indexes    : ["name"]
 });
 Flow = db.model('Flow');
@@ -63,13 +65,13 @@ connect.createServer.apply(connect, [
 
     app.get("/nodes/:node", function(req, res, next) {
       var node = req.params.node.replace("%20", " ");
-      Node.find({name: node}).all(function(cursor) {
+      Node.find({name: node}).one(function(cursor) {
         if (!cursor || cursor.length === 0) {
           res.writeHead(404, {"Content-type": "application/json"});
           res.end(JSON.stringify({code: 404, body: "Not Found"}));
         } else {
           res.writeHead(200, {"Content-type": "application/json"});
-          res.end(JSON.stringify(cursor[0], null, "  "));
+          res.end(JSON.stringify(cursor, null, "  "));
         }
       });
     });
@@ -78,17 +80,16 @@ connect.createServer.apply(connect, [
       if (req.body) {
         var node = req.params.node.replace("%20", " ");
         Node.find({name: node}).one(function(cursor) {
+          console.log(cursor);
           if (!cursor || cursor.length === 0) {
             res.writeHead(404, {"Content-type": "application/json"});
             res.end(JSON.stringify({code: 404, body: "Not Found"}));
           } else {
-            var stored = cursor[0];
-            Object.keys(stored).forEach(function(key) {
-              if (req.body[key] && key !== "_id" && key !== "name") {
-                stored[key] = req.body[key];
-              };
+            cursor.code = req.body.code;
+            cursor.save(function() {
+              res.writeHead("200", {"Content-type" : "application/json"});
+              res.end('{ "status": 204 }');
             });
-            stored.save();
           }
         });
       }
