@@ -48,7 +48,7 @@
               };
 
               function recurse(node) {
-                var transport = { 
+                var transport = {
                   settings: node.dehydrate(),
                   features: node.features
                 };
@@ -59,13 +59,13 @@
                       children.push(recurse(node.children[i]));
                   }
                 }
-                
+
                 if (children !== false) {
                   transport.children = children;
                 }
                 return transport;
               }
-              
+
               res.scene = recurse(branch);
               return res;
             };
@@ -93,9 +93,11 @@
                 scene = fromTransport(JSON.parse(data));
               },
               error : function() {
-                scene = carena.build({x:10, y: 10, width: 160, height: 160, style : { backgroundColor:"red" }},
-                  ["carena.Node", "carena.Draggable"]
-                )
+                scene = carena.build({
+                  x:10, y: 10, width: 160, height: 160,
+                  style : { backgroundColor:"red" }
+                },
+                ["carena.Node", "carena.Draggable"])
               },
               complete: function() {
                 scene.event.bind("node.dirty", save);
@@ -111,28 +113,30 @@ scene.event.bind("*", function(name) { console.log(name); });
                 }, 0);
               }
             })
-            
-           
+
+
             document.addEventListener("keydown", function(ev) {
+console.log(ev.keyCode);
               if (ev.keyCode === 8) {
                 ev.preventDefault();
                 ev.stopPropagation();
-                
+
                 if (selected) {
                   var parent = selected.parent;
                   selected.parent.remove(selected);
                   selected = parent.child(0);
                 }
-                
+
               } else if (ev.keyCode === 32) {
 
                 var rnd = carena.build({x:20, y: 20, width: 100, height:100,
-                  color: "rgb(" + (new Date()).getTime()%255 + ', 128,' + Math.round(Math.random()*200%255) + ")"
+                  color: "rgb(" + (new Date()).getTime()%255 +
+                         ", 128," + Math.round(Math.random()*200%255) + ")"
                 }, [
                   "carena.Node", "carena.Draggable"
                 ]);
-                
-                
+
+
                 var port = carena.build({x:10, y: 10, width: 20, height:20,
                   color: "green"
                 }, [
@@ -143,14 +147,17 @@ scene.event.bind("*", function(name) { console.log(name); });
               } else if (ev.keyCode === 78 && ev.ctrlKey === true) {
                 ev.preventDefault();
                 // spawn a new carena
-                var editorWindow = BaseNode({
+                var editorWindow = carena.build({
                   color: "blue",
                   x:100, y: 100,
-                  height: 400,
+                  height: 310,
                   width: 400
-                },[] /* TODO: fix me */),
+                },[
+                  "carena.Node",
+                  "carena.Draggable"
+                ]),
                 editor       = carena.build({
-                  x:110,y:150, width: 380, height: 340
+                  x:110,y:140, width: 380, height: 260
                 }, [
                   "carena.Node",
                   "carena.RelativeToParent",
@@ -160,9 +167,64 @@ scene.event.bind("*", function(name) { console.log(name); });
                 lineNumbers = carena.build({},[
                   "cider.LineNumbers",
                   "carena.RelativeToParent"
+                ]),
+                name = carena.build({
+                  x:110,
+                  y:110,
+                  width: 270,
+                  height: 20,
+                  textOffset : {
+                    x: 10,
+                    y: 5
+                  }
+                },[
+                  "carena.Node",
+                  "carena.RelativeToParent",
+                  "cider.Textual",
+                  "cider.Editable"
+                ]),
+                saveButton = carena.build({
+                  width: 80,
+                  height: 20,
+                  x:410,
+                  y:110,
+                  color: "grey"
+                },[
+                  "carena.Node",
+                  "carena.Eventable",
+                  "carena.RelativeToParent"
                 ]);
 
-                camera.add(editorWindow.add(editor.add(lineNumbers)));
+                // Setup the button
+                // TODO: this probably could be made easier heh.
+                saveButton.event.bind("mouse.in", function() {
+                  saveButton.color = "orange";
+                  return false;
+                });
+                saveButton.event.bind("mouse.out", function(name, data) {
+                  saveButton.color = "grey";
+                });
+                saveButton.render = function(renderer) {
+
+                  renderer.context.fillStyle = saveButton.color;
+                  renderer.context.fillRect(saveButton.x,
+                                            saveButton.y,
+                                            saveButton.width,
+                                            saveButton.height);
+
+                  renderer.context.fillStyle = "black";
+                  renderer.context.fillText("save", saveButton.x+20, saveButton.y+14);
+                };
+                saveButton.event.bind("mouse.up", function(name, data) {
+                  console.log("saving!!!!");
+                  // Save to storage
+
+                  // remove the editor
+                  editorWindow.parent.remove(editorWindow);
+                });
+
+
+                camera.add(editorWindow.add(editor.add(lineNumbers)).add(name).add(saveButton));
               }
             }, true);
 
