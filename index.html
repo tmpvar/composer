@@ -14,78 +14,24 @@
       jQuery(function() {
 
         var feature = carena.feature,
-            renderer = carena.Build({}, [feature.Renderer], {
+            renderer = carena.build({}, ["carena.Renderer"], {
               canvas: document.getElementById("composer")
             }),
-            camera = carena.Build({}, [feature.Camera, feature.DropManager], {
+            camera = carena.build({}, ["carena.Camera", "carena.DropManager"], {
               renderer: renderer
             }),
-            scene = carena.Build({}, [feature.Node, feature.Eventable]);
+            scene = carena.build({}, ["carena.Node", "carena.Eventable"]);
 
             var fromTransport = function(obj) {
-              // setup namespaces
-
-              var features = {
-
-              };
-
-              for (var name in obj.features) {
-                if (obj.features.hasOwnProperty(name)) {
-                  var pos = window,
-                      url = obj.features[name],
-                      s = name.split(".");
-
-                  // Navigate the object to get to the feature list
-                  for (var j=0; j<s.length; j++) {
-
-                    if (pos[s[j]]) {
-                      pos = pos[s[j]];
-                    } else {
-                      throw new Error("Please include " + url);
-                    }
-                  }
-                  features[name] = pos;
+              var flow = carena.build({}, obj.scene.features, obj.scene.settings || {});
+              if (obj.scene.children && obj.scene.children.length > 0) {
+                for (var nodeIdx = 0; nodeIdx<obj.scene.children.length; nodeIdx++) {
+                  // build an array of node features
+                  var current = obj.scene.children[nodeIdx];
+                  flow.add(carena.build({}, current.features, current.settings || {}));
                 }
               }
-
-              for (var nodeIdx = 0; nodeIdx<obj.scene.length; nodeIdx++) {
-                // build an array of node features
-                var nodeFeatures = [], current = obj.scene[nodeIdx];
-                for (var f = 0; f<current.features.length; f++) {
-                  var nodeFeature = current.features[f],
-                      s           = nodeFeature.split("."),
-                      str         = [],
-                      match       = false;
-
-                    while(s.length>0) {
-                      str.push(s.shift());
-                      if (features[str.join(".")]) {
-                        match = features[str.join(".")];
-                        break;
-                      }
-                    }
-                  if (!match) {
-                    throw new Error("Feature not defined " + nodeFeature);
-                  }
-
-                  // ensure the last part of the feature exists
-                  var absFeature = match, parts = [];
-                  while (s.length>0) {
-                    var part = s.shift();
-                    parts.push(part);
-                    if (absFeature[part]) {
-                      absFeature = absFeature[part];
-                    } else {
-                      throw new Error(str.join(".") +
-                                      " does not have a " +
-                                      parts.join(".") + " feature");
-                    }
-                  }
-                  nodeFeatures.push(absFeature);
-                }
-                return carena.Build(current.settings || {}, nodeFeatures);
-              }
-              return features;
+              return flow;
             };
 
             var toTransport = function(branch) {
@@ -97,56 +43,58 @@
               }, loc = scene;
 
               function recurse(node) {
-                var transport = { settings: node.dehydrate() };
-                 
-                /*for (var p in node) {
-                  if (node.hasOwnProperty(p)) {
-                    if (typeof node[p] !== 'function') {
-                      transport.settings[p] = node[p];
-                    }
+                var transport = { 
+                  settings: node.dehydrate(),
+                  features: node.features
+                };
+                var children = false;
+                if (node.children && node.children.length) {
+                  children = [];
+                  for (var i = 0; i<node.children.length; i++) {
+                    children.push(recurse(node.children[i]));
                   }
-                }*/
+                }
+                
+                if (children !== false) {
+                  transport.children = children;
+                }
                 return transport;
               }
               res.scene = recurse(branch);
               return res;
             };
 
-            var scene = fromTransport({
-              features : {
-               "carena.feature" : "http://tmpvar.com/project/carena/lib/carena.js",
-               "composer.feature" : "http://tmpvar.com/project/composer/lib/composer.js"
-              },
-              scene : [
-                {
-                   settings : {
-                     x: 0,
-                     y: 0,
-                     width: 100,
-                     height: 100,
-                     color: "red"
-                  },
-                  children : [
-                    {
-                      settings : {},
-                      children: [],
+          jQuery.ajax({
+            url : "/flows/THEFLOW",
+            dataType: "json",
+            success : function(data) {
+              var saving = false;
+              var scene = fromTransport(JSON.parse(data));
+              
+              scene.event.bind("node.dirty", function() {
+                if (!saving) {
+                  saving = true;
+                  jQuery.ajax({
+                    type : "post",
+                    url  : "/flows/",
+                    data : JSON.stringify(toTransport(scene)),
+                    contentType : "application/json",
+                    success : function(data) {
+                      console.log(data);
+                      saving = false;
                     }
-                  ],
-                  features : [
-                    "carena.feature.Node",
-                    "carena.feature.Eventable",
-                    "carena.feature.Draggable"
-                  ]
+                  });
                 }
-              ]
-          });
-          camera.target = scene;
+              });
 
-          console.dir(toTransport(scene));
-            setTimeout(function render() {
-              camera.render();
-              setTimeout(render, 10);
-            }, 0);
+              camera.target = scene;
+
+              setTimeout(function render() {
+                camera.render();
+                setTimeout(render, 10);
+              }, 0);
+            }
+          })
 
             document.addEventListener("keydown", function(ev) {
               if (ev.keyCode === 78 && ev.ctrlKey === true) {
@@ -158,17 +106,17 @@
                   height: 400,
                   width: 400
                 },[] /* TODO: fix me */),
-                editor       = carena.Build({
+                editor       = carena.build({
                   x:110,y:150, width: 380, height: 340
                 }, [
-                  feature.Node,
-                  feature.RelativeToParent,
-                  cider.feature.Textual,
-                  cider.feature.Editable,
+                  "carena.Node",
+                  "carena.RelativeToParent",
+                  "cider.Textual",
+                  "cider.Editable",
                 ]),
-                lineNumbers = carena.Build({},[
-                  cider.feature.LineNumbers,
-                  feature.RelativeToParent
+                lineNumbers = carena.build({},[
+                  "cider.LineNumbers",
+                  "carena.RelativeToParent"
                 ]);
 
                 camera.add(editorWindow.add(editor.add(lineNumbers)));

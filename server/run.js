@@ -14,24 +14,29 @@ connect.createServer.apply(connect, [
   connect.bodyDecoder(),
   connect.router(function(app) {
     app.get("/flows/:name", function(req, res, next) {
-      Flow.find({name: "123"}).all(function(cursor) {
+      Flow.find({name: req.params.name}).all(function(cursor) {
         if (!cursor || cursor.length === 0) {
-          res.writeHead(404, {'Content-Type':'text/json'});
+          res.writeHead(404, {'Content-Type':'application/json'});
           res.end(JSON.stringify({code: 404, body: "Not Found"}));
         } else {
-          res.writeHead(200, {'Content-Type':'text/json'});
-          res.end(JSON.stringify(cursor.pop(), true, "  "));
+          res.writeHead(200, {'Content-Type':'application/json'});
+          res.end(JSON.stringify(cursor.pop()));
         }
       });
     });
     app.post("/flows", function(req, res, next) {
       if (req.body) {
-        var flow = new Flow(req.body);
-        if (flow.IsNew()) {
+        req.body.name = "THEFLOW";
+        req.body._id = 123123123; 
+        var flow = new Flow(req.body, true);
+        
+       
+        //if (flow.IsNew()) {
           flow.save(function() {
-            console.log(flow.toString());
+            res.writeHead("201",{"Content-Type" : "application/json"});
+            res.end('{ "status": 201}');
           });
-        }
+        //}
       }
     });
 
