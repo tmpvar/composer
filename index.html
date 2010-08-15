@@ -104,7 +104,6 @@
                 scene.event.bind("mouse.down", function(name, data) {
                   selected = data.target;
                 });
-scene.event.bind("*", function(name) { console.log(name); });
                 camera.target = scene;
                 scene.dirty = true;
                 setTimeout(function render() {
@@ -116,7 +115,6 @@ scene.event.bind("*", function(name) { console.log(name); });
 
 
             document.addEventListener("keydown", function(ev) {
-console.log(ev.keyCode);
               if (ev.keyCode === 8) {
                 ev.preventDefault();
                 ev.stopPropagation();
@@ -145,6 +143,7 @@ console.log(ev.keyCode);
 
                 scene.add(rnd.add(port));
               } else if (ev.keyCode === 78 && ev.ctrlKey === true) {
+
                 ev.preventDefault();
                 // spawn a new carena
                 var editorWindow = carena.build({
@@ -203,6 +202,7 @@ console.log(ev.keyCode);
                 });
                 saveButton.event.bind("mouse.out", function(name, data) {
                   saveButton.color = "grey";
+                  return false;
                 });
                 saveButton.render = function(renderer) {
 
@@ -215,15 +215,25 @@ console.log(ev.keyCode);
                   renderer.context.fillStyle = "black";
                   renderer.context.fillText("save", saveButton.x+20, saveButton.y+14);
                 };
-                saveButton.event.bind("mouse.up", function(name, data) {
-                  console.log("saving!!!!");
-                  // Save to storage
+                function mouseUp(evName, data) {
+                  if (data.target === saveButton) {
+                    // Save to storage
 
-                  // remove the editor
-                  editorWindow.parent.remove(editorWindow);
-                });
+                    // remove the editor
+                    if (editor.parent) {
+                      editor.parent.remove(editor);
+                    }
+                    if (name.parent) {
+                      name.parent.remove(name);
+                    }
 
-
+                    if (editorWindow.parent) {
+                      editorWindow.parent.remove(editorWindow);
+                    }
+                    return false;
+                  }
+                }
+                saveButton.event.bind("mouse.up", mouseUp);
                 camera.add(editorWindow.add(editor.add(lineNumbers)).add(name).add(saveButton));
               }
             }, true);
