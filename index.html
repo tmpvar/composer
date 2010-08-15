@@ -114,7 +114,16 @@
             })
 
             document.addEventListener("keydown", function(ev) {
-              if (ev.keyCode === 78 && ev.ctrlKey === true) {
+              if (ev.keyCode === 32) {
+                var rnd = carena.build({x:20, y: 20, width: 100, height:100,
+                  color: "rgb(" + (new Date()).getTime()%255 + ', 128,' + Math.round(Math.random()*200%255) + ")"
+                  
+                }, [
+                  "carena.Node", "carena.Draggable"
+                ]);
+
+                scene.add(rnd);
+              } else if (ev.keyCode === 78 && ev.ctrlKey === true) {
                 ev.preventDefault();
                 // spawn a new carena
                 var editorWindow = BaseNode({
