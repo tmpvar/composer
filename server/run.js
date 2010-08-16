@@ -27,7 +27,7 @@ connect.createServer.apply(connect, [
           res.end(JSON.stringify({code: 404, body: "Not Found"}));
         } else {
           res.writeHead(200, {'Content-type':'application/json'});
-          res.end(JSON.stringify(cursor.pop(), null, "  "));
+          res.end(cursor.pop().toJSON());
         }
       });
     });
@@ -49,7 +49,11 @@ connect.createServer.apply(connect, [
     app.get("/nodes", function(req, res, next) {
       Node.find().all(function(cursor) {
         res.writeHead(200, {"Content-type": "application/json"});
-        res.end(JSON.stringify(cursor, null, "  "));
+        var result = [];
+        cursor.forEach(function(obj) {
+          result.push(obj.toObject());
+        });
+        res.end(JSON.stringify(result));
       });
     });
 
@@ -71,7 +75,7 @@ connect.createServer.apply(connect, [
           res.end(JSON.stringify({code: 404, body: "Not Found"}));
         } else {
           res.writeHead(200, {"Content-type": "application/json"});
-          res.end(JSON.stringify(cursor, null, "  "));
+          res.end(cursor[0].toJSON());
         }
       });
     });

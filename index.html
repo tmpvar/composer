@@ -90,7 +90,7 @@
               url : "/flows/THEFLOW",
               dataType: "json",
               success : function(data) {
-                scene = fromTransport(JSON.parse(data));
+                scene = fromTransport(data);
               },
               error : function() {
                 scene = carena.build({
@@ -113,7 +113,7 @@
               }
             })
 
-
+            var chooser = null;
             document.addEventListener("keydown", function(ev) {
               if (ev.keyCode === 8) {
                 ev.preventDefault();
@@ -126,14 +126,36 @@
                 }
 
               } else if (ev.keyCode === 32) {
-
+                // Spawn a dialog for choosing a node from the db
+                if (chooser === null) {
+                  chooser = true;
+                  jQuery.ajax({
+                    url: "/nodes",
+                    dataType: "json",
+                    success: function(data) {
+                      //var data = JSON.parse(data);
+                      console.log(data);
+                    }
+                  });
+                  
+                }
+              
+                /*
                 var rnd = carena.build({x:20, y: 20, width: 100, height:100,
                   color: "rgb(" + (new Date()).getTime()%255 +
                          ", 128," + Math.round(Math.random()*200%255) + ")"
                 }, [
-                  "carena.Node", "carena.Draggable"
+                  "carena.Node", "carena.Draggable", "composer.Functional"
                 ]);
+                jQuery.ajax({
+                  url: "/nodes/" + name.toString(),
+                  dataType: "json",
+                  success: function(data) {
+                    var data = JSON.parse(data);
 
+                    camera.add(editorWindow.add(editor.add(lineNumbers)).add(name).add(saveButton));
+                  }
+                });
 
                 var port = carena.build({x:10, y: 10, width: 20, height:20,
                   color: "green"
@@ -141,124 +163,121 @@
                   "carena.RelativeToParent", "composer.Port"
                 ]);
 
-                scene.add(rnd.add(port));
+                scene.add(rnd.add(port));*/
               } else if (ev.keyCode === 78 && ev.ctrlKey === true) {
-
-                ev.preventDefault();
-                // spawn a new carena
-                var editorWindow = carena.build({
-                  color: "blue",
-                  x:100, y: 100,
-                  height: 310,
-                  width: 400
-                },[
-                  "carena.Node",
-                  "carena.Draggable"
-                ]),
-                editor       = carena.build({
-                  x:110,y:140, width: 380, height: 260
-                }, [
-                  "carena.Node",
-                  "carena.RelativeToParent",
-                  "cider.Textual",
-                  "cider.Editable",
-                  "cider.FocusTarget"
-                ]),
-                lineNumbers = carena.build({},[
-                  "cider.LineNumbers",
-                  "carena.RelativeToParent"
-                ]),
-                name = carena.build({
-                  x:110,
-                  y:110,
-                  width: 270,
-                  height: 20,
-                  textOffset : {
-                    x: 10,
-                    y: 5
-                  }
-                },[
-                  "carena.Node",
-                  "carena.RelativeToParent",
-                  "cider.Textual",
-                  "cider.Editable",
-                  "cider.FocusTarget"
-                ]),
-                saveButton = carena.build({
-                  width: 80,
-                  height: 20,
-                  x:410,
-                  y:110,
-                  color: "grey"
-                },[
-                  "carena.Node",
-                  "carena.Eventable",
-                  "carena.RelativeToParent"
-                ]);
-
-                // Setup the button
-                // TODO: this probably could be made easier heh.
-                saveButton.event.bind("mouse.in", function() {
-                  saveButton.color = "orange";
-                  return false;
-                });
-                saveButton.event.bind("mouse.out", function(name, data) {
-                  saveButton.color = "grey";
-                  return false;
-                });
-                saveButton.render = function(renderer) {
-
-                  renderer.context.fillStyle = saveButton.color;
-                  renderer.context.fillRect(saveButton.x,
-                                            saveButton.y,
-                                            saveButton.width,
-                                            saveButton.height);
-
-                  renderer.context.fillStyle = "black";
-                  renderer.context.fillText("save", saveButton.x+20, saveButton.y+14);
-                };
-                function mouseUp(evName, data) {
-                  if (data.target === saveButton) {
-                    // Save to storage
-
-                    // remove the editor
-                    // TODO: figure out the root cause of this
-                    if (!editor.parent || !name.parent || !editorWindow.parent) {
-                      return;
-                    }
-                    jQuery.ajax({
-                      url: "/nodes/test",
-                      contentType: "application/json",
-                      type: "put",
-                      dataType : "json",
-                      data : JSON.stringify({
-                        name: "test",
-                        code: editor.toString()
-                      }),
-                      success : function() {
-                        editor.parent.remove(editor);
-                        name.parent.remove(name);
-                        editorWindow.parent.remove(editorWindow);
-                      }
-                    });
-
-
-                    return false;
-                  }
-                }
-                saveButton.event.bind("mouse.up", mouseUp);
-                jQuery.ajax({
-                  url: "/nodes/test",
-                  dataType: "json",
-                  success: function(data) {
-                    var data = JSON.parse(data);
-                    editor.fromString(data.code);
-                    camera.add(editorWindow.add(editor.add(lineNumbers)).add(name).add(saveButton));
-                  }
-                });
-
+                spawnEditor(true, "test", "-\n--");
               }
             }, true);
+            
+            function spawnEditor(newNode, nodeName, nodeCode) {
+              //ev.preventDefault();
+              // spawn a new carena
+              var editorWindow = carena.build({
+                color: "blue",
+                x:100, y: 100,
+                height: 310,
+                width: 400
+              },[
+                "carena.Node",
+                "carena.Draggable"
+              ]),
+              editor       = carena.build({
+                x:110,y:140, width: 380, height: 260
+              }, [
+                "carena.Node",
+                "carena.RelativeToParent",
+                "cider.Textual",
+                "cider.Editable",
+                "cider.FocusTarget"
+              ]),
+              lineNumbers = carena.build({},[
+                "cider.LineNumbers",
+                "carena.RelativeToParent"
+              ]),
+              name = carena.build({
+                x:110,
+                y:110,
+                width: 270,
+                height: 20,
+                textOffset : {
+                  x: 10,
+                  y: 5
+                }
+              },[
+                "carena.Node",
+                "carena.RelativeToParent",
+                "cider.Textual",
+                "cider.Editable",
+                "cider.FocusTarget"
+              ]),
+              saveButton = carena.build({
+                width: 80,
+                height: 20,
+                x:410,
+                y:110,
+                color: "grey"
+              },[
+                "carena.Node",
+                "carena.Eventable",
+                "carena.RelativeToParent"
+              ]);
+
+              name.fromString(nodeName);
+
+              // Setup the button
+              // TODO: this probably could be made easier heh.
+              saveButton.event.bind("mouse.in", function() {
+                saveButton.color = "orange";
+                return false;
+              });
+              saveButton.event.bind("mouse.out", function(name, data) {
+                saveButton.color = "grey";
+                return false;
+              });
+              saveButton.render = function(renderer) {
+
+                renderer.context.fillStyle = saveButton.color;
+                renderer.context.fillRect(saveButton.x,
+                                          saveButton.y,
+                                          saveButton.width,
+                                          saveButton.height);
+
+                renderer.context.fillStyle = "black";
+                renderer.context.fillText("save", saveButton.x+20, saveButton.y+14);
+              };
+              function mouseUp(evName, data) {
+                if (data.target === saveButton) {
+                  // Save to storage
+
+                  // remove the editor
+                  // TODO: figure out the root cause of this
+                  if (!editor.parent || !name.parent || !editorWindow.parent) {
+                    return;
+                  }
+                  var req = {
+                    contentType: "application/json",
+                    dataType : "json",
+                    data : JSON.stringify({
+                      name: name.toString(),
+                      code: editor.toString()
+                    }),
+                    success : function() {
+                      editor.parent.remove(editor);
+                      name.parent.remove(name);
+                      editorWindow.parent.remove(editorWindow);
+                    }
+                  };
+                  req.url = (newNode) ? "/nodes" : "/nodes/" + name.toString();
+                  req.type = (newNode) ? "post" : "put";
+                  jQuery.ajax(req);
+                  return false;
+                }
+              }
+              saveButton.event.bind("mouse.up", mouseUp);
+              editor.fromString(nodeCode);
+
+              camera.add(editorWindow.add(editor.add(lineNumbers)).add(name).add(saveButton));
+            }
 
       });
     </script>
