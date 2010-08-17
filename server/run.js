@@ -18,7 +18,7 @@ Flow = db.model('Flow');
 Node = db.model('Node');
 
 connect.createServer.apply(connect, [
-  connect.logger(),
+//  connect.logger(),
   connect.bodyDecoder(),
   connect.router(function(app) {
     app.get("/flows/:name", function(req, res, next) {

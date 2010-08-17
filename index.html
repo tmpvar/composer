@@ -23,20 +23,36 @@
             scene;
 
             var fromTransport = function(obj) {
-              var flow = carena.build({}, obj.scene.features, obj.scene.settings || {});
+              var flow = carena.build({}, obj.scene.features || [
+                "carena.Node",
+                "carena.Eventable",
+              ], obj.scene.settings || {});
 
               function recurse(node, data) {
                 if (data.children && data.children.length > 0) {
                   for (var nodeIdx = 0; nodeIdx<data.children.length; nodeIdx++) {
                     // build an array of node features
-                    var current = data.children[nodeIdx],
-                        built   = carena.build({}, current.features, current.settings || {});
+                    var current = data.children[nodeIdx];
+                    current.settings = current.settings || {
+                      color : "white",
+                      x:50,
+                      y:50,
+                      width: 100,
+                      height:100
+
+                    };
+
+                    var built = carena.build({}, current.features, current.settings || {});
                     node.add(recurse(built, current));
                   }
                 }
                 return node;
               }
-              return recurse(flow, obj.scene);
+              if (!obj.scene.children && obj.scene.length) {
+                return recurse(flow, { children: obj.scene });
+              } else {
+                return recurse(flow, obj.scene);
+              }
             };
 
             var toTransport = function(branch) {
@@ -79,7 +95,7 @@
                   url  : "/flows/",
                   data : JSON.stringify(toTransport(scene)),
                   contentType : "application/json",
-                  success : function(data) {
+                  complete : function(data) {
                     saving = false;
                   }
                 });
@@ -114,10 +130,10 @@
             })
 
             var chooser = null;
-          
-            
+
+
             document.addEventListener("keydown", function(ev) {
-              
+
               if (ev.keyCode === 8) {
                 ev.preventDefault();
                 ev.stopPropagation();
@@ -150,10 +166,11 @@
                       },[
                         "carena.Node"
                       ]);
-                  
+
                       camera.add(chooser);
 
                       var buildSelectionNode = function(item) {
+                        console.log(item);
                         var tmp = carena.build({
                           y: chooser.y + 1+(i*h)+(i*1),
                           x: chooser.x + 10,
@@ -161,53 +178,80 @@
                           height: h,
                           background: "black",
                           color: "white",
-                          code: item.code || ""
+                          code: item.code || "",
+                          name: item.name || ""
                         }, [
                           "carena.Node",
                           "carena.Eventable",
                           "composer.Functional",
                           "cider.Textual"
                         ]);
-                        
-                        tmp.event.bind("mouse.in", function() { 
+
+                        tmp.event.bind("mouse.in", function() {
                           tmp.background = "#222";
                         });
-                        
-                        tmp.event.bind("mouse.out", function() { 
+
+                        tmp.event.bind("mouse.out", function() {
                           tmp.background = "black";
                         });
-                        
+
                         tmp.event.bind("mouse.down", function() {
                           // Build a real node.
                           var rnd = carena.build({x:20, y: 20, width: 100, height:100,
                             color: "rgb(" + (new Date()).getTime()%255 +
                                    ", 128," + Math.round(Math.random()*200%255) + ")",
-                            code : data.code
+                            code : window.location + "flows/" + data.name,
+                            name : data.name || "",
                           }, [
                             "carena.Node", "carena.Draggable", "composer.Functional"
                           ]);
-                          
+
                           var label = carena.build({
                             x: rnd.x,
                             y:rnd.y,
                             width:rnd.width,
                             height: 20,
-                            //background: ,
-                            color: "black",
+//                            background: ,
+                            color: "white",
                             text: item.name
                           },[
                             "carena.Node",
                             "cider.Textual",
                             "carena.RelativeToParent"
                           ]);
-                          
-                          camera.target.add(rnd.add(label));
+
+                          label.setTextOffset({x: 2, y: 2});
+                          var outport = carena.build({
+                            x: rnd.x + (rnd.width/2) - 10,
+                            y: rnd.y + rnd.height,
+                            width: 20,
+                            height:10,
+                            color: "green"
+                          }, [
+                            "carena.RelativeToParent", "composer.Port"
+                          ]);
+
+                          var inport = carena.build({
+                            x: rnd.x + (rnd.width/2) -  10,
+                            y: rnd.y - 10,
+                            width: 20,
+                            height:10,
+                            color: "red"
+                          }, [
+                            "carena.RelativeToParent", "composer.Port"
+                          ]);
+
+                          camera.target.add(rnd.add(label).add(inport).add(outport));
                           chooser.parent.remove(chooser);
                           chooser = null;
                         });
 
                         tmp.setTextOffset({ x: 10, y: 6});
                         tmp.fromString(item.name);
+
+
+
+
                         return tmp;
                       }
 
@@ -216,11 +260,11 @@
                       }
                     }
                   });
-                  
+
                 }
-              
+
                 /*
-                
+
                 jQuery.ajax({
                   url: "/nodes/" + name.toString(),
                   dataType: "json",
@@ -230,19 +274,12 @@
                     camera.add(editorWindow.add(editor.add(lineNumbers)).add(name).add(saveButton));
                   }
                 });
-
-                var port = carena.build({x:10, y: 10, width: 20, height:20,
-                  color: "green"
-                }, [
-                  "carena.RelativeToParent", "composer.Port"
-                ]);
-
-                scene.add(rnd.add(port));*/
+                */
               } else if (ev.keyCode === 78 && ev.ctrlKey === true) {
                 spawnEditor(true, "test", "-\n--");
               }
             }, true);
-            
+
             function spawnEditor(newNode, nodeName, nodeCode) {
               //ev.preventDefault();
               // spawn a new carena

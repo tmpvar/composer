@@ -85,18 +85,13 @@ stdin.on('end', function() {
   function build() {
 
     function run(message) {
-      //console.log("message");
-      //console.log(message);
       return function(err, output) {
-        //console.log("error,output");
-        //console.log(err, output);
 
       }
     }
 try {
-    Conduct(composition,"B1")(run(), run());
+    Conduct(composition)();
 } catch (e) {
-console.log("fuck");
 
 }
   }
