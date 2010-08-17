@@ -1,0 +1,77 @@
+var stdin = process.openStdin(),
+    http  = require("http"),
+    url   = require("url"),
+    data = "",
+    rawObject,
+    Script = process.binding("evals").Script;
+
+stdin.on('data', function(chunk) {
+  data += chunk;
+});
+
+stdin.on('end', function() {
+
+  // process the input as json
+  try {
+    rawObject = JSON.parse(data);
+  } catch (e) {
+    console.log(e.stack);
+    process.exit();
+  }
+
+
+
+  // collect the code responsible for execution
+  var pipes = [], composition = {}, letter = 65, total = 0;
+  rawObject.scene.forEach(function(node) {
+    if (node.features) {
+      node.features.forEach(function(feature) {
+        if (feature === "composer.Functional") {
+          var id = String.fromCharCode(letter);
+          letter++;
+          node.conductorId = id;
+          composition[id] = [
+          ];
+
+          total++;
+
+          // TODO: do not assume this is a url!
+
+
+          var nodeUrl = url.parse(node.code);
+          var client = http.createClient(nodeUrl.port, nodeUrl.hostname);
+          var request = client.request("GET", nodeUrl.pathname, {
+            host: nodeUrl.host
+          });
+
+          request.end();
+          request.on('response', function(response) {
+            var nodeCode = "";
+
+            response.on("data",function(chunk) {
+              nodeCode += chunk.toString("ascii");
+            });
+
+            response.on("end", function() {
+              total--;
+              // TODO: too much assumption here..
+              var toRun = "fn = " + JSON.parse(nodeCode).code;
+              var context = { fn : null};
+              composition[id] = Script.runInNewContext(toRun, context);
+            });
+
+          });
+
+        } else if (feature === "composer.Pipe") {
+          pipes.push(node);
+        }
+      });
+    }
+  });
+
+ console.dir(composition);
+  // build out a conductor flow using the data + ports
+
+  // execute the flow!
+
+});

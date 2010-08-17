@@ -1,6 +1,7 @@
 var connect    = require("connect"),
     mongo      = require("mongoose").Mongoose,
     db         = mongo.connect('mongodb://localhost/composer'),
+    spawn      = require("child_process").spawn,
     Flow, Node;
 
 mongo.model('Flow',{
@@ -28,6 +29,40 @@ connect.createServer.apply(connect, [
         } else {
           res.writeHead(200, {'Content-type':'application/json'});
           res.end(cursor.pop().toJSON());
+        }
+      });
+    });
+
+    app.get("/flows/:name/run", function(req, res, next) {
+      Flow.find({name: req.params.name}).one(function(cursor) {
+
+        if (!cursor || cursor.length === 0) {
+          res.writeHead(404, {"Content-type":"application/json"});
+          res.end(JSON.stringify({code: 404, body: "Not Found"}));
+        } else {
+
+          var child = spawn("/usr/local/bin/node",
+                           [__dirname + "/execute.js"]);
+          res.writeHead(200, {"Content-type":"text/plain"});
+          child.stdin.write(cursor.toJSON());
+          child.stdin.end();
+          child.stderr.on("data", function(data) {
+            console.log(data.toString());
+          });
+          child.stdout.on("data", function(data) {
+            res.write(data);
+          });
+
+          var done = function() {
+            try {
+              res.end();
+            } catch (e) {
+              console.log("the client disconnected");
+            }
+          };
+
+          child.stdout.on("end", done);
+          child.on("exit", done);
         }
       });
     });
@@ -75,7 +110,7 @@ connect.createServer.apply(connect, [
           res.end(JSON.stringify({code: 404, body: "Not Found"}));
         } else {
           res.writeHead(200, {"Content-type": "application/json"});
-          res.end(cursor[0].toJSON());
+          res.end(cursor.toJSON());
         }
       });
     });
@@ -84,7 +119,6 @@ connect.createServer.apply(connect, [
       if (req.body) {
         var node = req.params.node.replace("%20", " ");
         Node.find({name: node}).one(function(cursor) {
-          console.log(cursor);
           if (!cursor || cursor.length === 0) {
             res.writeHead(404, {"Content-type": "application/json"});
             res.end(JSON.stringify({code: 404, body: "Not Found"}));

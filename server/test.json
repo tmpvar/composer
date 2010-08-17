@@ -1,0 +1,24 @@
+{
+  "name": "hello world!",
+  "scene" : [
+    {
+      "name": "helloworld",
+      "myId" : "1",
+      "code": "http://localhost:3000/nodes/helloworld",
+      "features": ["composer.Functional"]
+    },
+    {
+      "name" : "debug",
+      "myId" : "2",
+      "code" : "http://localhost:3000/nodes/debug",
+      "features" : ["composer.Functional"]
+    },
+    {
+      "name" : "port",
+      "myId" : "3",
+      "source" : "1",
+      "target" : "2",
+      "features" : ["composer.Pipe"]
+    }
+  ]
+}
