@@ -23,6 +23,7 @@
             scene;
 
             var fromTransport = function(obj) {
+              obj.scene = obj.scene || {};
               var flow = carena.build({}, obj.scene.features || [
                 "carena.Node",
                 "carena.Eventable",
@@ -82,7 +83,7 @@
                 return transport;
               }
 
-              res.scene = recurse(branch);
+              res.scene = recurse(branch).children;
               return res;
             };
 
@@ -156,6 +157,7 @@
                     url: "/nodes",
                     dataType: "json",
                     success: function(data) {
+                      
                       var l = data.length, h = 30, w = 300;
                       chooser = carena.build({
                         x: 10,
@@ -200,8 +202,8 @@
                           var rnd = carena.build({x:20, y: 20, width: 100, height:100,
                             color: "rgb(" + (new Date()).getTime()%255 +
                                    ", 128," + Math.round(Math.random()*200%255) + ")",
-                            code : window.location + "flows/" + data.name,
-                            name : data.name || "",
+                            code : window.location + "nodes/" + item.name,
+                            name : item.name || "",
                           }, [
                             "carena.Node", "carena.Draggable", "composer.Functional"
                           ]);

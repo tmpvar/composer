@@ -40,19 +40,22 @@ connect.createServer.apply(connect, [
           res.writeHead(404, {"Content-type":"application/json"});
           res.end(JSON.stringify({code: 404, body: "Not Found"}));
         } else {
-
+          res.writeHead(200, {"Content-type":"text/plain"});
           var child = spawn("/usr/local/bin/node",
                            [__dirname + "/execute.js"]);
-          res.writeHead(200, {"Content-type":"text/plain"});
+
           child.stdin.write(cursor.toJSON());
           child.stdin.end();
+
           child.stderr.on("data", function(data) {
             console.log(data.toString());
           });
           child.stdout.on("data", function(data) {
             res.write(data);
           });
+          res.on("end", function() {
 
+          });
           var done = function() {
             try {
               res.end();
@@ -63,6 +66,7 @@ connect.createServer.apply(connect, [
 
           child.stdout.on("end", done);
           child.on("exit", done);
+          
         }
       });
     });
@@ -79,7 +83,6 @@ connect.createServer.apply(connect, [
         });
       }
     });
-
 
     app.get("/nodes", function(req, res, next) {
       Node.find().all(function(cursor) {

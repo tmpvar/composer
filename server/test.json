@@ -1,24 +1,298 @@
 {
-  "name": "hello world!",
-  "scene" : [
-    {
-      "name": "helloworld",
-      "myId" : "1",
-      "code": "http://localhost:3000/nodes/helloworld",
-      "features": ["composer.Functional"]
-    },
-    {
-      "name" : "debug",
-      "myId" : "2",
-      "code" : "http://localhost:3000/nodes/debug",
-      "features" : ["composer.Functional"]
-    },
-    {
-      "name" : "port",
-      "myId" : "3",
-      "source" : "1",
-      "target" : "2",
-      "features" : ["composer.Pipe"]
+    "name": "THEFLOW",
+    "_id": 123123123,
+    "scene": [
+        {
+            "settings": {
+                "source": "236fe512-285d-efc6-cefb-9c34c614f723",
+                "target": "884e9e4b-d93f-c34c-05f3-fe6ecee3f9cd",
+                "x": 0,
+                "y": 0,
+                "z": 0,
+                "width": 0,
+                "height": 0,
+                "style": {
+                    "backgroundColor": "white"
+                },
+                "myId": "d7c658bd-2f3c-e217-14d9-1c89cff59b2d"
+            },
+            "features": [
+                "carena.Node",
+                "carena.Eventable",
+                "composer.Pipe"
+            ]
+        },
+        {
+            "settings": {
+                "source": "6e6415c0-2a06-a8b9-7c66-556d9fe2e3e2",
+                "target": "884e9e4b-d93f-c34c-05f3-fe6ecee3f9cd",
+                "x": 0,
+                "y": 0,
+                "z": 0,
+                "width": 0,
+                "height": 0,
+                "style": {
+                    "backgroundColor": "white"
+                },
+                "myId": "5a9a5615-51bb-c573-2909-5413221f9e22"
+            },
+            "features": [
+                "carena.Node",
+                "carena.Eventable",
+                "composer.Pipe"
+            ]
+        },
+        {
+            "settings": {
+                "x": 345,
+                "y": 68,
+                "z": 0,
+                "width": 100,
+                "height": 100,
+                "style": {
+                    "backgroundColor": "rgb(104, 128,199)"
+                },
+                "name": "helloworld",
+                "code": "http://localhost:3000/nodes/helloworld",
+                "myId": "7897f582-165b-3497-fe20-e93154de11ca"
+            },
+            "features": [
+                "carena.Node",
+                "carena.Eventable",
+                "carena.Draggable",
+                "composer.Functional"
+            ],
+            "children": [
+                {
+                    "settings": {
+                        "x": 345,
+                        "y": 68,
+                        "z": 0,
+                        "width": 100,
+                        "height": 20,
+                        "style": {
+                            "backgroundColor": "white"
+                        },
+                        "text": "helloworld",
+                        "myId": "fae6e2c7-f0bd-1dd8-6638-7dce4391fd08"
+                    },
+                    "features": [
+                        "carena.Node",
+                        "carena.Eventable",
+                        "cider.Textual",
+                        "carena.RelativeToParent"
+                    ]
+                },
+                {
+                    "settings": {
+                        "x": 385,
+                        "y": 58,
+                        "z": 0,
+                        "width": 20,
+                        "height": 10,
+                        "style": {
+                            "backgroundColor": "red"
+                        },
+                        "myId": "f1e0d63c-47e3-f3bb-503f-52eb5fa55a45"
+                    },
+                    "features": [
+                        "carena.Eventable",
+                        "carena.RelativeToParent",
+                        "carena.Node",
+                        "carena.Draggable",
+                        "composer.Port"
+                    ]
+                },
+                {
+                    "settings": {
+                        "x": 385,
+                        "y": 168,
+                        "z": 0,
+                        "width": 20,
+                        "height": 10,
+                        "style": {
+                            "backgroundColor": "green"
+                        },
+                        "myId": "6e6415c0-2a06-a8b9-7c66-556d9fe2e3e2"
+                    },
+                    "features": [
+                        "carena.Eventable",
+                        "carena.RelativeToParent",
+                        "carena.Node",
+                        "carena.Draggable",
+                        "composer.Port"
+                    ]
+                }
+            ]
+        },
+        {
+            "settings": {
+                "x": 174,
+                "y": 70,
+                "z": 0,
+                "width": 100,
+                "height": 100,
+                "style": {
+                    "backgroundColor": "rgb(172, 128,200)"
+                },
+                "name": "goodbye",
+                "code": "http://localhost:3000/nodes/goodbye",
+                "myId": "1547890a-c047-1a69-7259-95d14338874e"
+            },
+            "features": [
+                "carena.Node",
+                "carena.Eventable",
+                "carena.Draggable",
+                "composer.Functional"
+            ],
+            "children": [
+                {
+                    "settings": {
+                        "x": 214,
+                        "y": 60,
+                        "z": 0,
+                        "width": 20,
+                        "height": 10,
+                        "style": {
+                            "backgroundColor": "red"
+                        },
+                        "myId": "7d1a5a43-db39-bdb1-fa17-cd9e534aaced"
+                    },
+                    "features": [
+                        "carena.Eventable",
+                        "carena.RelativeToParent",
+                        "carena.Node",
+                        "carena.Draggable",
+                        "composer.Port"
+                    ]
+                },
+                {
+                    "settings": {
+                        "x": 174,
+                        "y": 70,
+                        "z": 0,
+                        "width": 100,
+                        "height": 20,
+                        "style": {
+                            "backgroundColor": "white"
+                        },
+                        "text": "goodbye",
+                        "myId": "f481253a-ff22-b923-7e09-ba8b48e2dd81"
+                    },
+                    "features": [
+                        "carena.Node",
+                        "carena.Eventable",
+                        "cider.Textual",
+                        "carena.RelativeToParent"
+                    ]
+                },
+                {
+                    "settings": {
+                        "x": 214,
+                        "y": 170,
+                        "z": 0,
+                        "width": 20,
+                        "height": 10,
+                        "style": {
+                            "backgroundColor": "green"
+                        },
+                        "myId": "236fe512-285d-efc6-cefb-9c34c614f723"
+                    },
+                    "features": [
+                        "carena.Eventable",
+                        "carena.RelativeToParent",
+                        "carena.Node",
+                        "carena.Draggable",
+                        "composer.Port"
+                    ]
+                }
+            ]
+        },
+        {
+            "settings": {
+                "x": 262,
+                "y": 270,
+                "z": 0,
+                "width": 100,
+                "height": 100,
+                "style": {
+                    "backgroundColor": "rgb(225, 128,45)"
+                },
+                "name": "debug",
+                "code": "http://localhost:3000/nodes/debug",
+                "myId": "1e2ab07a-f23f-7e25-36a7-f06e9bf37d12"
+            },
+            "features": [
+                "carena.Node",
+                "carena.Eventable",
+                "carena.Draggable",
+                "composer.Functional"
+            ],
+            "children": [
+                {
+                    "settings": {
+                        "x": 262,
+                        "y": 270,
+                        "z": 0,
+                        "width": 100,
+                        "height": 20,
+                        "style": {
+                            "backgroundColor": "white"
+                        },
+                        "text": "debug",
+                        "myId": "a38648eb-74a2-1f95-757d-b2e793051260"
+                    },
+                    "features": [
+                        "carena.Node",
+                        "carena.Eventable",
+                        "cider.Textual",
+                        "carena.RelativeToParent"
+                    ]
+                },
+                {
+                    "settings": {
+                        "x": 302,
+                        "y": 260,
+                        "z": 0,
+                        "width": 20,
+                        "height": 10,
+                        "style": {
+                            "backgroundColor": "red"
+                        },
+                        "myId": "884e9e4b-d93f-c34c-05f3-fe6ecee3f9cd"
+                    },
+                    "features": [
+                        "carena.Eventable",
+                        "carena.RelativeToParent",
+                        "carena.Node",
+                        "carena.Draggable",
+                        "composer.Port"
+                    ]
+                },
+                {
+                    "settings": {
+                        "x": 302,
+                        "y": 370,
+                        "z": 0,
+                        "width": 20,
+                        "height": 10,
+                        "style": {
+                            "backgroundColor": "green"
+                        },
+                        "myId": "6cb9b23f-c92a-172f-63c0-17a54b5fb611"
+                    },
+                    "features": [
+                        "carena.Eventable",
+                        "carena.RelativeToParent",
+                        "carena.Node",
+                        "carena.Draggable",
+                        "composer.Port"
+                    ]
+                }
+            ]
+        }
+    ],
+    "features": {
+        "carena.feature": "http://tmpvar.com/project/carena/lib/carena.js"
     }
-  ]
 }

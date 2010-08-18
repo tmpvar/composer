@@ -7,11 +7,10 @@ var stdin = process.openStdin(),
     Script = process.binding("evals").Script;
 
 stdin.on('data', function(chunk) {
-  data += chunk;
+  data += chunk.toString();
 });
 
 stdin.on('end', function() {
-
   // process the input as json
   try {
     rawObject = JSON.parse(data);
@@ -20,82 +19,94 @@ stdin.on('end', function() {
     process.exit();
   }
 
-
-
   // collect the code responsible for execution
-  var pipes = [], composition = {}, letter = 64, total = 0;
+  var pipes = [], composition = {}, refs = {}, letter = 64, total = 0;
   rawObject.scene.forEach(function(node) {
     if (node.features) {
-      node.features.forEach(function(feature) {
-        if (feature === "composer.Functional") {
-          letter++;
-          var id = String.fromCharCode(letter);
-          node.conductorId = id;
-          composition[id] = [
-          ];
+      var features = node.features.join(",");
 
-          composition[id].push("_1");
-          if (letter === 66) {
+      if (features.indexOf("composer.Functional") > -1) {
+        var lastLetter = String.fromCharCode(letter).toUpperCase();
+        letter++;
+        var id = String.fromCharCode(letter);
+        node.conductorId = id;
+        refs[node.settings.myId] = id;
+        composition[id] = [];
+        total++;
 
-            composition[id].push("A1");
-          }
-          total++;
+        // TODO: do not assume this is a url!
+        var nodeUrl = url.parse(node.settings.code);
+        var client = http.createClient(nodeUrl.port, nodeUrl.hostname);
+        var request = client.request("GET", nodeUrl.pathname, {
+          host: nodeUrl.host
+        });
 
-          // TODO: do not assume this is a url!
+        request.end();
+        request.on('response', function(response) {
+          var nodeCode = "";
 
-
-          var nodeUrl = url.parse(node.code);
-          var client = http.createClient(nodeUrl.port, nodeUrl.hostname);
-          var request = client.request("GET", nodeUrl.pathname, {
-            host: nodeUrl.host
+          response.on("data",function(chunk) {
+            nodeCode += chunk.toString("ascii");
           });
 
-          request.end();
-          request.on('response', function(response) {
-            var nodeCode = "";
+          response.on("end", function() {
+            total--;
+            // TODO: too much assumption here..
+            var toRun = "(function(){ return " + JSON.parse(nodeCode).code + "})()";
+            var context = { fn : null};
 
-            response.on("data",function(chunk) {
-              nodeCode += chunk.toString("ascii");
-            });
+            // TODO: this only works with return :/ need to fix
+            composition[id].push(Script.runInThisContext(toRun));
 
-            response.on("end", function() {
-              total--;
-              // TODO: too much assumption here..
-              var toRun = "(function(){ return " + JSON.parse(nodeCode).code + "})()";
-              var context = { fn : null};
+            if (total === 0) {
+              execute();
+            }
+          });
+        });
 
-              // TODO: this only works with return :/ need to fix
-              composition[id].push(Script.runInThisContext(toRun));
-
-              if (total === 0) {
-                build();
+        var num = 0;
+        node.children.forEach(function(child) {
+          if (child.features) {
+            child.features.forEach(function(feature) {
+              if (feature === "composer.Port") {
+                refs[child.settings.myId] = node.conductorId;
+                if (num>0) {
+                  refs[child.settings.myId] += num;
+                }
+                num++;
               }
-            });
+            })
+          }
+        });
+      } else if (features.indexOf("composer.Pipe") > -1) {
+        pipes.push(node);
+      }
 
-          });
-
-        } else if (feature === "composer.Pipe") {
-          pipes.push(node);
-        }
-      });
     }
   });
 
-  // build out a conductor flow using the data + ports
-  function build() {
-
-    function run(message) {
-      return function(err, output) {
-
-      }
+  // Meanwhile, back at the bat cave..
+  var flowable = {}
+  // Now connect the pipes, yay!
+  pipes.forEach(function(pipe) {
+    var source = refs[pipe.settings.source],
+        target = refs[pipe.settings.target];
+    if (!flowable[target]) {
+      flowable[target] = [];
     }
-try {
-    Conduct(composition)();
-} catch (e) {
+    flowable[target].push(source);
+  });
 
-}
+  flowable.forEach(function(performer, flow) {
+    Array.prototype.unshift.apply(composition[flow], performer);
+  })
+
+  // finally, execute the flow
+  function execute() {
+    try {
+      Conduct(composition)();
+    } catch (e) {
+      console.dir(e);
+    }
   }
-
-  // execute the flow!
-
 });
