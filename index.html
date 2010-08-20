@@ -282,7 +282,10 @@
               }
             }, true);
 
+            var editorSpawned = false;
+
             function spawnEditor(newNode, nodeName, nodeCode) {
+              editorSpawned = true;
               //ev.preventDefault();
               // spawn a new carena
               var editorWindow = carena.build({
@@ -360,6 +363,7 @@
               };
               function mouseUp(evName, data) {
                 if (data.target === saveButton) {
+                  editorSpawned = false;
                   // Save to storage
 
                   // remove the editor
@@ -391,7 +395,31 @@
 
               camera.add(editorWindow.add(editor.add(lineNumbers)).add(name).add(saveButton));
             }
-
+            
+            var terminal = carena.build({
+              x:0,y:renderer.canvas.height-200, width: renderer.canvas.width, height: 200, text: "> spawning terminal..."
+            }, [
+              "carena.Node",
+              "carena.RelativeToParent",
+              "cider.Textual",
+              "cider.FocusTarget"
+            ]);
+            
+            window.addEventListener("keydown", function(ev) {
+              
+            })
+            
+            camera.add(terminal);
+            
+            // Console stuff
+            window.addEventListener("keydown", function(ev) {
+              if (ev.keyCode === 13 && editorSpawned === false) {
+                terminal.fromString("> executing....");
+                jQuery.get("/flows/THEFLOW/run", function(data) {
+                  terminal.fromString(terminal + "\n> Results:\n\n" + data);
+                });
+              }
+            });
       });
     </script>
   </head>

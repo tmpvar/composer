@@ -56,7 +56,7 @@ stdin.on('end', function() {
             var context = { fn : null};
 
             // TODO: this only works with return :/ need to fix
-            composition[id].push(Script.runInThisContext(toRun));
+            composition[id].push(Script.runInThisContext(toRun, context));
 
             if (total === 0) {
               execute();
@@ -101,9 +101,20 @@ stdin.on('end', function() {
     Array.prototype.unshift.apply(composition[flow], performer);
   })
 
+
+
   // finally, execute the flow
   function execute() {
     try {
+      console.log("{");
+      var parts = []
+      composition.forEach(function(part, k) {
+        var p = k +': ["' + part.join('","') + "]"
+        parts.push(p.replace('"function', "function"));
+      });
+      
+      console.log(parts.join(",") + "\n}");
+      
       Conduct(composition)();
     } catch (e) {
       console.dir(e);
