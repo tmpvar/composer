@@ -106,7 +106,7 @@ stdin.on('end', function() {
   // finally, execute the flow
   function execute() {
     try {
-      console.log("{");
+    /*  console.log("{");
       var parts = []
       composition.forEach(function(part, k) {
         var p = k +': ["' + part.join('","') + "]"
@@ -114,7 +114,7 @@ stdin.on('end', function() {
       });
       
       console.log(parts.join(",") + "\n}");
-      
+      */
       Conduct(composition)();
     } catch (e) {
       console.dir(e);
