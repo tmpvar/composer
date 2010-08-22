@@ -273,6 +273,8 @@
                   });
                 }
               } else if (ev.keyCode === 78 && ev.ctrlKey === true) {
+                ev.preventDefault();
+                ev.stopPropagation();
                 spawnEditor(true, "test", "-\n--");
               }
             }, true);
