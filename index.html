@@ -3,7 +3,7 @@
   <head>
     <title>Composer</title>
     <style>
-      body { margin:0px; padding:0px;}
+      body { margin:0px; padding:0px; background: #000;}
     </style>
     <script type="text/javascript" src="../carena/lib/carena.js"></script>
     <script type="text/javascript" src="lib/composer.js"></script>
@@ -12,6 +12,15 @@
     <script src="lib/jquery.js"></script>
     <script type="text/javascript">
       jQuery(function() {
+/*        $(window).resize(function() {
+          renderer.context.save();
+          $("#composer").css({
+            width:  $(window).width() + "px",
+            height: $(window).height() + "px"
+          });
+          renderer.context = renderer.canvas.getContext("2d");
+
+        });*/
 
         var feature = carena.feature,
             renderer = carena.build({}, ["carena.Renderer"], {
@@ -125,6 +134,10 @@
                 camera.target = scene;
                 scene.dirty = true;
                 setTimeout(function render() {
+                  var ctx = renderer.context;
+                  ctx.canvas.width =  $(window).width();//.innerWidth-10;
+                  ctx.canvas.height = $(window).height()-5;//window.innerHeight-5;
+                  document.body.height = $(window).height();
                   camera.render();
                   setTimeout(render, 10);
                 }, 0);
@@ -386,10 +399,12 @@
               "cider.Textual",
               "cider.FocusTarget"
             ]);
-
-            window.addEventListener("keydown", function(ev) {
-
-            })
+            var _terminalRender = terminal.render;
+            terminal.render = function(renderer) {
+              terminal.y = renderer.canvas.height-200;
+              terminal.width = renderer.canvas.width;
+              _terminalRender(renderer);
+            }
 
             camera.add(terminal);
 
