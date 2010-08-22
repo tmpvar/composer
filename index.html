@@ -162,12 +162,12 @@
               }
             })
 
-            var chooser = null;
+            var chooser = null,
+                editorWindow = false;
 
 
             document.addEventListener("keydown", function(ev) {
-
-              if (ev.keyCode === 8) {
+              if (ev.keyCode === 8) { // backspace
                 ev.preventDefault();
                 ev.stopPropagation();
 
@@ -180,8 +180,11 @@
                 if (chooser !== null && chooser.x) {
                   chooser.parent.remove(chooser);
                   chooser = null;
+                } else if (editorWindow) {
+                  editorWindow.parent.remove(editorWindow);
+                  editorWindow = false;
                 }
-              } else if (ev.keyCode === 32) {
+              } else if (ev.keyCode === 32 && editorWindow === false) {
                 // Spawn a dialog for choosing a node from the db
                 if (chooser === null) {
                   chooser = true;
@@ -204,7 +207,6 @@
                       camera.add(chooser);
 
                       var buildSelectionNode = function(item) {
-                        console.log(item);
                         var tmp = carena.build({
                           y: chooser.y + 1+(i*h)+(i*1),
                           x: chooser.x + 10,
@@ -301,13 +303,10 @@
               }
             }, true);
 
-            var editorSpawned = false;
 
             function spawnEditor(newNode, nodeName, nodeCode) {
-              editorSpawned = true;
-              //ev.preventDefault();
               // spawn a new carena
-              var editorWindow = carena.build({
+              editorWindow = carena.build({
                 color: "blue",
                 x:100, y: 100,
                 height: 310,
@@ -315,8 +314,9 @@
               },[
                 "carena.Node",
                 "carena.Draggable"
-              ]),
-              editor       = carena.build({
+              ]);
+
+              var editor       = carena.build({
                 x:110,y:140, width: 380, height: 260
               }, [
                 "carena.Node",
@@ -382,7 +382,6 @@
               };
               function mouseUp(evName, data) {
                 if (data.target === saveButton) {
-                  editorSpawned = false;
                   // Save to storage
 
                   // remove the editor
@@ -401,6 +400,7 @@
                       editor.parent.remove(editor);
                       name.parent.remove(name);
                       editorWindow.parent.remove(editorWindow);
+                      editorWindow = false;
                     }
                   };
                   req.url = (newNode) ? "/nodes" : "/nodes/" + name.toString();
@@ -434,7 +434,7 @@
 
             // Console stuff
             window.addEventListener("keydown", function(ev) {
-              if (ev.keyCode === 13 && editorSpawned === false) {
+              if (ev.keyCode === 13 && editorWindow === false) {
                 terminal.fromString("> executing....");
                 jQuery.get("/flows/THEFLOW/run", function(data) {
                   terminal.fromString(terminal + "\n> Results:\n\n" + data);
