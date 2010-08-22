@@ -26,18 +26,27 @@
             renderer = carena.build({}, ["carena.Renderer"], {
               canvas: document.getElementById("composer")
             }),
-            camera = carena.build({}, ["carena.Eventable", "carena.Camera", "carena.DragManager", "carena.DropManager"], {
+            camera = carena.build({},
+              [
+                "carena.Eventable",
+                "carena.Camera",
+                "carena.DragManager",
+                "carena.DropManager"
+              ], {
               renderer: renderer
             }),
             scene;
 
             var fromTransport = function(obj) {
-              obj.scene = obj.scene || {};
-              var flow = carena.build({}, obj.scene.features || [
+              //obj.scene = obj.scene || {};
+              var flow = carena.build({x:0, y:0, width: 100, height: 100, color: 'darkgrey'},
+              [
                 "carena.Renderable",
                 "carena.Node",
-                "carena.Eventable"
-              ], obj.scene.settings || {});
+                "carena.Eventable",
+                "carena.Draggable",
+                "carena.RelativeToParent"
+              ], {});//obj.scene.settings || {});
 
               function recurse(node, data) {
                 if (data.children && data.children.length > 0) {
@@ -50,19 +59,21 @@
                       y:50,
                       width: 100,
                       height:100
-
                     };
-
                     var built = carena.build({}, current.features, current.settings || {});
                     node.add(recurse(built, current));
                   }
                 }
                 return node;
               }
-              if (!obj.scene.children && obj.scene.length) {
-                return recurse(flow, { children: obj.scene });
+              if (obj.scene) {
+                if (!obj.scene.children && obj.scene.length) {
+                  return recurse(flow, { children: obj.scene });
+                } else {
+                  return recurse(flow, obj.scene);
+                }
               } else {
-                return recurse(flow, obj.scene);
+                return flow;
               }
             };
 
@@ -118,6 +129,9 @@
               dataType: "json",
               success : function(data) {
                 scene = fromTransport(data);
+                scene.width=0;
+                scene.height=0;
+                scene.containsPoint = function() { return true; }
               },
               error : function() {
                 scene = carena.build({
@@ -132,12 +146,16 @@
                   selected = data.target;
                 });
                 camera.target = scene;
+
                 scene.dirty = true;
                 setTimeout(function render() {
                   var ctx = renderer.context;
-                  ctx.canvas.width =  $(window).width();//.innerWidth-10;
-                  ctx.canvas.height = $(window).height()-5;//window.innerHeight-5;
-                  document.body.height = $(window).height();
+                  if (ctx.canvas.width !== $(window).width() ||
+                      ctx.canvas.height != $(window).height()-5)
+                  {
+                    ctx.canvas.width =  $(window).width();//.innerWidth-10;
+                    ctx.canvas.height = $(window).height()-5;//window.innerHeight-5;
+                  }
                   camera.render();
                   setTimeout(render, 10);
                 }, 0);
@@ -219,7 +237,11 @@
                             code : window.location + "nodes/" + item.name,
                             name : item.name || "",
                           }, [
-                            "carena.Node", "carena.Eventable", "carena.Draggable", "composer.Functional"
+                            "carena.Node",
+                            "carena.Eventable",
+                            "carena.Draggable",
+                            "carena.RelativeToParent",
+                            "composer.Functional"
                           ]);
 
                           var label = carena.build({
