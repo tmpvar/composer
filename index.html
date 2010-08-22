@@ -12,19 +12,12 @@
     <script src="lib/jquery.js"></script>
     <script type="text/javascript">
       jQuery(function() {
-/*        $(window).resize(function() {
-          renderer.context.save();
-          $("#composer").css({
-            width:  $(window).width() + "px",
-            height: $(window).height() + "px"
-          });
-          renderer.context = renderer.canvas.getContext("2d");
-
-        });*/
-
         var feature = carena.feature,
             renderer = carena.build({}, ["carena.Renderer"], {
-              canvas: document.getElementById("composer")
+              canvas: document.getElementById("composer"),
+              style: {
+                backgroundColor : "rgba(0,0,0,0.3)"
+              }
             }),
             camera = carena.build({},
               [
@@ -145,6 +138,23 @@
                 scene.event.bind("mouse.down", function(name, data) {
                   selected = data.target;
                 });
+                scene.event.bind("mouse.down.*", function(name,data) {
+                  renderer.context.fillColor = "white";
+                  var parts = name.split(".");
+                  if (parts.length === 3     &&
+                      parts[2] === "2"       &&
+                      editorWindow === false &&
+                      data.target.features)
+                  {
+                    // double click
+                    for (var i=0; i<data.target.features.length; i++) {
+                      if (data.target.features[i] === "composer.Functional") {
+                        spawnEditor(false, "editing", "this is an existing node");
+                        break;
+                      }
+                    }
+                  }
+                });
                 camera.target = scene;
 
                 scene.dirty = true;
@@ -182,9 +192,12 @@
                   chooser = null;
                 } else if (editorWindow) {
                   editorWindow.parent.remove(editorWindow);
+                  for (var i=0; i<editorWindow.children.length; i++) {
+                    editorWindow.children[i].parent = null;
+                  }
                   editorWindow = false;
                 }
-              } else if (ev.keyCode === 32 && editorWindow === false) {
+              } else if (ev.keyCode === 32) {
                 // Spawn a dialog for choosing a node from the db
                 if (chooser === null) {
                   chooser = true;
@@ -299,7 +312,7 @@
               } else if (ev.keyCode === 78 && ev.ctrlKey === true) {
                 ev.preventDefault();
                 ev.stopPropagation();
-                spawnEditor(true, "test", "-\n--");
+                spawnEditor(true, "", "");
               }
             }, true);
 
@@ -316,7 +329,7 @@
                 "carena.Draggable"
               ]);
 
-              var editor       = carena.build({
+              var editor = carena.build({
                 x:110,y:140, width: 380, height: 260
               }, [
                 "carena.Node",
@@ -400,6 +413,9 @@
                       editor.parent.remove(editor);
                       name.parent.remove(name);
                       editorWindow.parent.remove(editorWindow);
+debugger;
+                      name.parent === null;
+                      editor.parent === null;
                       editorWindow = false;
                     }
                   };
@@ -419,9 +435,7 @@
               x:0,y:renderer.canvas.height-200, width: renderer.canvas.width, height: 200, text: "> spawning terminal..."
             }, [
               "carena.Node",
-              "carena.RelativeToParent",
               "cider.Textual",
-              "cider.FocusTarget"
             ]);
             var _terminalRender = terminal.render;
             terminal.render = function(renderer) {
