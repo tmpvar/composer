@@ -15,7 +15,7 @@ stdin.on('end', function() {
   try {
     rawObject = JSON.parse(data);
   } catch (e) {
-    console.log(e.stack);
+    console.dir(e.stack);
     process.exit();
   }
 
@@ -51,12 +51,32 @@ stdin.on('end', function() {
 
           response.on("end", function() {
             total--;
+            node.source = JSON.parse(nodeCode).code;
             // TODO: too much assumption here..
-            var toRun = "(function(){ return " + JSON.parse(nodeCode).code + "})()";
+            var toRun = "(function(){ return " + node.source + "})()";
             var context = { fn : null};
 
             // TODO: this only works with return :/ need to fix
             composition[id].push(Script.runInThisContext(toRun, context));
+
+            var num = 0;
+            node.children.forEach(function(child) {
+              if (child.features) {
+                child.features.forEach(function(feature) {
+                  if (feature === "composer.Port") {
+                    refs[child.settings.myId] = node.conductorId;
+                    if (num>0) {
+                      if (node.source.indexOf("return ") == -1) {
+                        refs[child.settings.myId] += (num-1);
+                      } else {
+                        refs[child.settings.myId] += num;
+                      }
+                    }
+                    num++;
+                  }
+                });
+              }
+            });
 
             if (total === 0) {
               execute();
@@ -64,26 +84,18 @@ stdin.on('end', function() {
           });
         });
 
-        var num = 0;
-        node.children.forEach(function(child) {
-          if (child.features) {
-            child.features.forEach(function(feature) {
-              if (feature === "composer.Port") {
-                refs[child.settings.myId] = node.conductorId;
-                if (num>0) {
-                  refs[child.settings.myId] += num;
-                }
-                num++;
-              }
-            })
-          }
-        });
       } else if (features.indexOf("composer.Pipe") > -1) {
         pipes.push(node);
       }
-
     }
   });
+
+
+
+
+  // finally, execute the flow
+  function execute() {
+
 
   // Meanwhile, back at the bat cave..
   var flowable = {}
@@ -101,20 +113,16 @@ stdin.on('end', function() {
     Array.prototype.unshift.apply(composition[flow], performer);
   })
 
-
-
-  // finally, execute the flow
-  function execute() {
     try {
-    /*  console.log("{");
+/*      console.log("{");
       var parts = []
       composition.forEach(function(part, k) {
         var p = k +': ["' + part.join('","') + "]"
         parts.push(p.replace('"function', "function"));
       });
-      
+
       console.log(parts.join(",") + "\n}");
-      */
+*/
       Conduct(composition)();
     } catch (e) {
       console.dir(e);
