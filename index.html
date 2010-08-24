@@ -3,8 +3,9 @@
   <head>
     <title>Composer</title>
     <style>
-      body { margin:0px; padding:0px; background: #000;}@font-face {
-      @font-family: "ProggyClean";
+      body { margin:0px; padding:0px; background: #000;}
+      @font-face {
+        font-family: "ProggyClean";
         src: url('fonts/ProggyClean.ttf');
       }
     </style>
@@ -16,6 +17,7 @@
     <script type="text/javascript">
       jQuery(function() {
         var feature  = carena.feature,
+            defaultFont = "16px ProggyClean",
             renderer = carena.build({}, ["carena.Renderer"], {
               canvas: document.getElementById("composer"),
               style: {
@@ -239,7 +241,7 @@
                       "composer.Functional",
                       "cider.Textual"
                     ]);
-
+                    tmp.font.set(defaultFont);
                     tmp.event.bind("mouse.in", function() {
                       tmp.background = "#222";
                     });
@@ -281,7 +283,7 @@
                         "cider.Textual",
                         "carena.RelativeToParent"
                       ]);
-
+                      label.font.set(defaultFont);
                       label.setTextOffset({x: 2, y: 2});
                       var outport = carena.build({
                         x: rnd.x + (rnd.width/2) - 10,
@@ -390,7 +392,8 @@
 
           name.fromString(nodeName);
           name.setFocus();
-
+          name.font.set(defaultFont);
+          editor.font.set(defaultFont);
           // Setup the button
           // TODO: this probably could be made easier heh.
           saveButton.event.bind("mouse.in", function() {
@@ -460,11 +463,13 @@
         }
 
         var terminal = carena.build({
-          x:0,y:renderer.canvas.height-200, width: renderer.canvas.width, height: 200, text: "> spawning terminal..."
+          x:0,y:renderer.canvas.height-200, width: renderer.canvas.width, height: 200, 
+          text: document.getElementById("terminal-text").innerText
         }, [
           "carena.Node",
           "cider.Textual",
         ]);
+        terminal.font.set(defaultFont);
         var _terminalRender = terminal.render;
         terminal.render = function(renderer) {
           terminal.y = renderer.canvas.height-200;
@@ -488,5 +493,17 @@
   </head>
   <body>
       <canvas id="composer" width="600" height="600"></canvas>
+<pre id="terminal-text" style="display:none">> spawning terminal...
+
+  Add nodes to the scene and link them up to perform operations
+
+  Keys:
+    control+n - create a new node
+    space     - add existing node
+    escape    - close editor / menu
+    click*2   - edit an existing node (menu or node)
+    return    - execute (results are shown in the terminal)
+
+</pre>
   </body>
 </html>
