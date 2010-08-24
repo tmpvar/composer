@@ -12,7 +12,7 @@
     <script src="lib/jquery.js"></script>
     <script type="text/javascript">
       jQuery(function() {
-        var feature = carena.feature,
+        var feature  = carena.feature,
             renderer = carena.build({}, ["carena.Renderer"], {
               canvas: document.getElementById("composer"),
               style: {
@@ -30,431 +30,449 @@
             }),
             scene;
 
-            var fromTransport = function(obj) {
-              //obj.scene = obj.scene || {};
-              var flow = carena.build({x:0, y:0, width: 100, height: 100, color: 'darkgrey'},
-              [
-                "carena.Renderable",
-                "carena.Node",
-                "carena.Eventable",
-                "carena.Draggable",
-                "carena.RelativeToParent"
-              ], {});//obj.scene.settings || {});
+        var fromTransport = function(obj) {
+          //obj.scene = obj.scene || {};
+          var flow = carena.build({x:0, y:0, width: 100, height: 100, color: 'darkgrey'},
+          [
+            "carena.Renderable",
+            "carena.Node",
+            "carena.Eventable",
+            "carena.Draggable",
+            "carena.RelativeToParent"
+          ], {});//obj.scene.settings || {});
 
-              function recurse(node, data) {
-                if (data.children && data.children.length > 0) {
-                  for (var nodeIdx = 0; nodeIdx<data.children.length; nodeIdx++) {
-                    // build an array of node features
-                    var current = data.children[nodeIdx];
-                    current.settings = current.settings || {
-                      color : "white",
-                      x:50,
-                      y:50,
-                      width: 100,
-                      height:100
-                    };
-                    var built = carena.build({}, current.features, current.settings || {});
-                    node.add(recurse(built, current));
-                  }
-                }
-                return node;
-              }
-              if (obj.scene) {
-                if (!obj.scene.children && obj.scene.length) {
-                  return recurse(flow, { children: obj.scene });
-                } else {
-                  return recurse(flow, obj.scene);
-                }
-              } else {
-                return flow;
-              }
-            };
-
-            var toTransport = function(branch) {
-              var res = {
-                features : {
-                  "carena.feature" : "http://tmpvar.com/project/carena/lib/carena.js"
-                },
-                scene : {}
-              };
-
-              function recurse(node) {
-                var transport = {
-                  settings: node.dehydrate(),
-                  features: node.features
+          function recurse(node, data) {
+            if (data.children && data.children.length > 0) {
+              for (var nodeIdx = 0; nodeIdx<data.children.length; nodeIdx++) {
+                // build an array of node features
+                var current = data.children[nodeIdx];
+                current.settings = current.settings || {
+                  color : "white",
+                  x:50,
+                  y:50,
+                  width: 100,
+                  height:100
                 };
-                var children = false;
-                if (node.children && node.children.length) {
-                  children = [];
-                  for (var i = 0; i<node.children.length; i++) {
-                      children.push(recurse(node.children[i]));
-                  }
-                }
-
-                if (children !== false) {
-                  transport.children = children;
-                }
-                return transport;
-              }
-
-              res.scene = recurse(branch).children;
-              return res;
-            };
-
-            var saving = false;
-            function save() {
-              if (!saving) {
-                saving = true;
-                jQuery.ajax({
-                  type : "post",
-                  url  : "/flows/",
-                  data : JSON.stringify(toTransport(scene)),
-                  contentType : "application/json",
-                  complete : function(data) {
-                    saving = false;
-                  }
-                });
+                var built = carena.build({}, current.features, current.settings || {});
+                node.add(recurse(built, current));
               }
             }
-            var selected = null;
-            jQuery.ajax({
-              url : "/flows/THEFLOW",
-              dataType: "json",
-              success : function(data) {
-                scene = fromTransport(data);
-                scene.width=0;
-                scene.height=0;
-                scene.containsPoint = function() { return true; }
-              },
-              error : function() {
-                scene = carena.build({
-                  x:10, y: 10, width: 160, height: 160,
-                  style : { backgroundColor:"red" }
-                },
-                ["node.Renderable","carena.Node","carena.Eventable", "carena.Draggable"])
-              },
-              complete: function() {
-                scene.event.bind("node.dirty", save);
-                scene.event.bind("mouse.down", function(name, data) {
-                  selected = data.target;
-                });
-                scene.event.bind("mouse.down.*", function(name,data) {
-                  renderer.context.fillColor = "white";
-                  var parts = name.split(".");
-                  if (parts.length === 3     &&
-                      parts[2] === "2"       &&
-                      editorWindow === false &&
-                      data.target.features)
-                  {
-                    // double click
-                    for (var i=0; i<data.target.features.length; i++) {
-                      if (data.target.features[i] === "composer.Functional") {
-                        spawnEditor(false, "editing", "this is an existing node");
-                        break;
-                      }
-                    }
-                  }
-                });
-                camera.target = scene;
+            return node;
+          }
+          if (obj.scene) {
+            if (!obj.scene.children && obj.scene.length) {
+              return recurse(flow, { children: obj.scene });
+            } else {
+              return recurse(flow, obj.scene);
+            }
+          } else {
+            return flow;
+          }
+        };
 
-                scene.dirty = true;
-                setTimeout(function render() {
-                  var ctx = renderer.context;
-                  if (ctx.canvas.width !== $(window).width() ||
-                      ctx.canvas.height != $(window).height()-5)
-                  {
-                    ctx.canvas.width =  $(window).width();//.innerWidth-10;
-                    ctx.canvas.height = $(window).height()-5;//window.innerHeight-5;
-                  }
-                  camera.render();
-                  setTimeout(render, 10);
-                }, 0);
+        var toTransport = function(branch) {
+          var res = {
+            features : {
+              "carena.feature" : "http://tmpvar.com/project/carena/lib/carena.js"
+            },
+            scene : {}
+          };
+
+          function recurse(node) {
+            var transport = {
+              settings: node.dehydrate(),
+              features: node.features
+            };
+            var children = false;
+            if (node.children && node.children.length) {
+              children = [];
+              for (var i = 0; i<node.children.length; i++) {
+                  children.push(recurse(node.children[i]));
               }
-            })
+            }
 
-            var chooser = null,
-                editorWindow = false;
+            if (children !== false) {
+              transport.children = children;
+            }
+            return transport;
+          }
 
+          res.scene = recurse(branch).children;
+          return res;
+        };
 
-            document.addEventListener("keydown", function(ev) {
-              if (ev.keyCode === 8) { // backspace
-                ev.preventDefault();
-                ev.stopPropagation();
-
-                if (selected) {
-                  var parent = selected.parent;
-                  selected.parent.remove(selected);
-                  selected = parent.child(0);
-                }
-              } else if (ev.keyCode === 27) { // escape
-                if (chooser !== null && chooser.x) {
-                  chooser.parent.remove(chooser);
-                  chooser = null;
-                } else if (editorWindow) {
-                  editorWindow.parent.remove(editorWindow);
-                  for (var i=0; i<editorWindow.children.length; i++) {
-                    editorWindow.children[i].parent = null;
+        var saving = false;
+        function save() {
+          if (!saving) {
+            saving = true;
+            jQuery.ajax({
+              type : "post",
+              url  : "/flows/",
+              data : JSON.stringify(toTransport(scene)),
+              contentType : "application/json",
+              complete : function(data) {
+                saving = false;
+              }
+            });
+          }
+        }
+        var selected = null;
+        jQuery.ajax({
+          url : "/flows/THEFLOW",
+          dataType: "json",
+          success : function(data) {
+            scene = fromTransport(data);
+            window.scene = scene;
+            scene.width=0;
+            scene.height=0;
+            scene.containsPoint = function() { return true; }
+          },
+          error : function() {
+            scene = carena.build({
+              x:10, y: 10, width: 160, height: 160,
+              style : { backgroundColor:"red" }
+            },
+            ["node.Renderable","carena.Node","carena.Eventable", "carena.Draggable"])
+          },
+          complete: function() {
+            scene.event.bind("node.dirty", save);
+            scene.event.bind("mouse.down", function(name, data) {
+              selected = data.target;
+            });
+            scene.event.bind("mouse.down.*", function(name,data) {
+              renderer.context.fillColor = "white";
+              var parts = name.split(".");
+              if (parts.length === 3     &&
+                  parts[2] === "2"       &&
+                  editorWindow === false &&
+                  data.target.features)
+              {
+                // double click
+                for (var i=0; i<data.target.features.length; i++) {
+                  if (data.target.features[i] === "composer.Functional") {
+                    jQuery.ajax({
+                      url      : data.target.code,
+                      dataType : "json",
+                      success  : function(codeObj) {
+                        spawnEditor(true, "", codeObj.code);
+                      }
+                    });
+                    break;
                   }
-                  editorWindow = false;
                 }
-              } else if (ev.keyCode === 32) {
-                // Spawn a dialog for choosing a node from the db
-                if (chooser === null) {
-                  chooser = true;
-                  jQuery.ajax({
-                    url: "/nodes",
-                    dataType: "json",
-                    success: function(data) {
+              }
+            });
+            camera.target = scene;
 
-                      var l = data.length, h = 30, w = 300;
-                      chooser = carena.build({
-                        x: 10,
-                        y: 10,
-                        height: (h*l)+l+1,
-                        width: w,
-                        color: "darkgrey"
-                      },[
-                        "carena.Node"
+            scene.dirty = true;
+            setTimeout(function render() {
+              var ctx = renderer.context;
+              if (ctx.canvas.width !== $(window).width() ||
+                  ctx.canvas.height != $(window).height()-5)
+              {
+                ctx.canvas.width =  $(window).width();//.innerWidth-10;
+                ctx.canvas.height = $(window).height()-5;//window.innerHeight-5;
+              }
+              camera.render();
+              setTimeout(render, 10);
+            }, 0);
+          }
+        })
+
+        var chooser = null,
+            editorWindow = false;
+
+
+        document.addEventListener("keydown", function(ev) {
+          if (ev.keyCode === 8) { // backspace
+            ev.preventDefault();
+            ev.stopPropagation();
+
+            if (selected) {
+              var parent = selected.parent;
+              selected.parent.remove(selected);
+              selected = parent.child(0);
+            }
+          } else if (ev.keyCode === 27) { // escape
+            if (chooser !== null && chooser.x) {
+              chooser.parent.remove(chooser);
+              chooser = null;
+            } else if (editorWindow) {
+              editorWindow.parent.remove(editorWindow);
+              for (var i=0; i<editorWindow.children.length; i++) {
+                editorWindow.children[i].parent = null;
+              }
+              editorWindow = false;
+            }
+          } else if (ev.keyCode === 32) {
+            // Spawn a dialog for choosing a node from the db
+            if (chooser === null) {
+              chooser = true;
+              jQuery.ajax({
+                url: "/nodes",
+                dataType: "json",
+                success: function(data) {
+
+                  var l = data.length, h = 30, w = 300;
+                  chooser = carena.build({
+                    x: 10,
+                    y: 10,
+                    height: (h*l)+l+1,
+                    width: w,
+                    color: "darkgrey"
+                  },[
+                    "carena.Node"
+                  ]);
+
+                  camera.add(chooser);
+
+                  var buildSelectionNode = function(item) {
+                    var tmp = carena.build({
+                      y: chooser.y + 1+(i*h)+(i*1),
+                      x: chooser.x + 10,
+                      width: chooser.width-20,
+                      height: h,
+                      background: "black",
+                      color: "white",
+                      code: item.code || "",
+                      name: item.name || ""
+                    }, [
+                      "carena.Node",
+                      "carena.Eventable",
+                      "composer.Functional",
+                      "cider.Textual"
+                    ]);
+
+                    tmp.event.bind("mouse.in", function() {
+                      tmp.background = "#222";
+                    });
+
+                    tmp.event.bind("mouse.out", function() {
+                      tmp.background = "black";
+                    });
+
+                    tmp.event.bind("mouse.down", function() {
+                      // Build a real node.
+                      var rnd = carena.build({x:20, y: 20, width: 100, height:100,
+                        color: "rgb(" + (new Date()).getTime()%255 +
+                               ", 128," + Math.round(Math.random()*200%255) + ")",
+                        code : window.location + "nodes/" + item.name,
+                        name : item.name || "",
+                      }, [
+                        "carena.Node",
+                        "carena.Eventable",
+                        "carena.Draggable",
+                        "carena.RelativeToParent",
+                        "composer.Functional"
                       ]);
 
-                      camera.add(chooser);
+                      var label = carena.build({
+                        x: rnd.x,
+                        y:rnd.y,
+                        width:rnd.width,
+                        height: 20,
+                        color: "white",
+                        text: item.name
+                      },[
+                        "carena.Node",
+                        "cider.Textual",
+                        "carena.RelativeToParent"
+                      ]);
 
-                      var buildSelectionNode = function(item) {
-                        var tmp = carena.build({
-                          y: chooser.y + 1+(i*h)+(i*1),
-                          x: chooser.x + 10,
-                          width: chooser.width-20,
-                          height: h,
-                          background: "black",
-                          color: "white",
-                          code: item.code || "",
-                          name: item.name || ""
-                        }, [
-                          "carena.Node",
-                          "carena.Eventable",
-                          "composer.Functional",
-                          "cider.Textual"
-                        ]);
+                      label.setTextOffset({x: 2, y: 2});
+                      var outport = carena.build({
+                        x: rnd.x + (rnd.width/2) - 10,
+                        y: rnd.y + rnd.height,
+                        width: 20,
+                        height:10,
+                        color: "green"
+                      }, [
+                        "carena.RelativeToParent", "composer.Port"
+                      ]);
 
-                        tmp.event.bind("mouse.in", function() {
-                          tmp.background = "#222";
-                        });
+                      var inport = carena.build({
+                        x: rnd.x + (rnd.width/2) -  10,
+                        y: rnd.y - 10,
+                        width: 20,
+                        height:10,
+                        color: "red"
+                      }, [
+                        "carena.RelativeToParent", "composer.Port"
+                      ]);
 
-                        tmp.event.bind("mouse.out", function() {
-                          tmp.background = "black";
-                        });
+                      camera.target.add(rnd.add(label).add(inport).add(outport));
+                      chooser.parent.remove(chooser);
+                      chooser = null;
+                    });
 
-                        tmp.event.bind("mouse.down", function() {
-                          // Build a real node.
-                          var rnd = carena.build({x:20, y: 20, width: 100, height:100,
-                            color: "rgb(" + (new Date()).getTime()%255 +
-                                   ", 128," + Math.round(Math.random()*200%255) + ")",
-                            code : window.location + "nodes/" + item.name,
-                            name : item.name || "",
-                          }, [
-                            "carena.Node",
-                            "carena.Eventable",
-                            "carena.Draggable",
-                            "carena.RelativeToParent",
-                            "composer.Functional"
-                          ]);
-
-                          var label = carena.build({
-                            x: rnd.x,
-                            y:rnd.y,
-                            width:rnd.width,
-                            height: 20,
-                            color: "white",
-                            text: item.name
-                          },[
-                            "carena.Node",
-                            "cider.Textual",
-                            "carena.RelativeToParent"
-                          ]);
-
-                          label.setTextOffset({x: 2, y: 2});
-                          var outport = carena.build({
-                            x: rnd.x + (rnd.width/2) - 10,
-                            y: rnd.y + rnd.height,
-                            width: 20,
-                            height:10,
-                            color: "green"
-                          }, [
-                            "carena.RelativeToParent", "composer.Port"
-                          ]);
-
-                          var inport = carena.build({
-                            x: rnd.x + (rnd.width/2) -  10,
-                            y: rnd.y - 10,
-                            width: 20,
-                            height:10,
-                            color: "red"
-                          }, [
-                            "carena.RelativeToParent", "composer.Port"
-                          ]);
-
-                          camera.target.add(rnd.add(label).add(inport).add(outport));
-                          chooser.parent.remove(chooser);
-                          chooser = null;
-                        });
-
-                        tmp.setTextOffset({ x: 10, y: 6});
-                        tmp.fromString(item.name);
-                        return tmp;
-                      }
-
-                      for (var i=0; i<l; i++) {
-                        chooser.add(buildSelectionNode(data[i]));
-                      }
-                    }
-                  });
-                }
-              } else if (ev.keyCode === 78 && ev.ctrlKey === true) {
-                ev.preventDefault();
-                ev.stopPropagation();
-                spawnEditor(true, "", "");
-              }
-            }, true);
-
-
-            function spawnEditor(newNode, nodeName, nodeCode) {
-              // spawn a new carena
-              editorWindow = carena.build({
-                color: "blue",
-                x:100, y: 100,
-                height: 310,
-                width: 400
-              },[
-                "carena.Node",
-                "carena.Draggable"
-              ]);
-
-              var editor = carena.build({
-                x:110,y:140, width: 380, height: 260
-              }, [
-                "carena.Node",
-                "carena.RelativeToParent",
-                "cider.Textual",
-                "cider.Editable",
-                "cider.FocusTarget"
-              ]),
-              lineNumbers = carena.build({},[
-                "cider.LineNumbers",
-                "carena.RelativeToParent"
-              ]),
-              name = carena.build({
-                x:110,
-                y:110,
-                width: 270,
-                height: 20,
-                textOffset : {
-                  x: 10,
-                  y: 5
-                }
-              },[
-                "carena.Node",
-                "carena.RelativeToParent",
-                "cider.Textual",
-                "cider.Editable",
-                "cider.FocusTarget"
-              ]),
-              saveButton = carena.build({
-                width: 80,
-                height: 20,
-                x:410,
-                y:110,
-                color: "grey"
-              },[
-                "carena.Node",
-                "carena.Eventable",
-                "carena.RelativeToParent"
-              ]);
-
-              name.fromString(nodeName);
-
-              // Setup the button
-              // TODO: this probably could be made easier heh.
-              saveButton.event.bind("mouse.in", function() {
-                saveButton.color = "orange";
-                return false;
-              });
-              saveButton.event.bind("mouse.out", function(name, data) {
-                saveButton.color = "grey";
-                return false;
-              });
-              saveButton.render = function(renderer) {
-
-                renderer.context.fillStyle = saveButton.color;
-                renderer.context.fillRect(saveButton.x,
-                                          saveButton.y,
-                                          saveButton.width,
-                                          saveButton.height);
-
-                renderer.context.fillStyle = "black";
-                renderer.context.fillText("save", saveButton.x+20, saveButton.y+14);
-              };
-              function mouseUp(evName, data) {
-                if (data.target === saveButton) {
-                  // Save to storage
-
-                  // remove the editor
-                  // TODO: figure out the root cause of this
-                  if (!editor.parent || !name.parent || !editorWindow.parent) {
-                    return;
+                    tmp.setTextOffset({ x: 10, y: 6});
+                    tmp.fromString(item.name);
+                    return tmp;
                   }
-                  var req = {
-                    contentType: "application/json",
-                    dataType : "json",
-                    data : JSON.stringify({
-                      name: name.toString(),
-                      code: editor.toString()
-                    }),
-                    success : function() {
-                      editor.parent.remove(editor);
-                      name.parent.remove(name);
-                      editorWindow.parent.remove(editorWindow);
-debugger;
-                      name.parent === null;
-                      editor.parent === null;
-                      editorWindow = false;
-                    }
-                  };
+
+                  for (var i=0; i<l; i++) {
+                    chooser.add(buildSelectionNode(data[i]));
+                  }
+                }
+              });
+            }
+          } else if (ev.keyCode === 78 && ev.ctrlKey === true) {
+            ev.preventDefault();
+            ev.stopPropagation();
+            spawnEditor(true, "", "");
+          }
+        }, true);
+
+
+        function spawnEditor(newNode, nodeName, nodeCode) {
+          // spawn a new carena
+          editorWindow = carena.build({
+            color: "blue",
+            x:100, y: 100,
+            height: 310,
+            width: 400
+          },[
+            "carena.Node",
+            "carena.Draggable"
+          ]);
+
+          var editor = carena.build({
+            x:110,y:140, width: 380, height: 260
+          }, [
+            "carena.Node",
+            "carena.RelativeToParent",
+            "cider.Textual",
+            "cider.Editable",
+            "cider.FocusTarget"
+          ]),
+          lineNumbers = carena.build({},[
+            "cider.LineNumbers",
+            "carena.RelativeToParent"
+          ]),
+          name = carena.build({
+            x:110,
+            y:110,
+            width: 270,
+            height: 20,
+            textOffset : {
+              x: 10,
+              y: 5
+            }
+          },[
+            "carena.Node",
+            "carena.RelativeToParent",
+            "cider.Textual",
+            "cider.Editable",
+            "cider.FocusTarget"
+          ]),
+          saveButton = carena.build({
+            width: 80,
+            height: 20,
+            x:410,
+            y:110,
+            color: "grey"
+          },[
+            "carena.Node",
+            "carena.Eventable",
+            "carena.RelativeToParent"
+          ]);
+
+          name.fromString(nodeName);
+          name.setFocus();
+
+          // Setup the button
+          // TODO: this probably could be made easier heh.
+          saveButton.event.bind("mouse.in", function() {
+            saveButton.color = "orange";
+            return false;
+          });
+          saveButton.event.bind("mouse.out", function(name, data) {
+            saveButton.color = "grey";
+            return false;
+          });
+          saveButton.render = function(renderer) {
+
+            renderer.context.fillStyle = saveButton.color;
+            renderer.context.fillRect(saveButton.x,
+                                      saveButton.y,
+                                      saveButton.width,
+                                      saveButton.height);
+
+            renderer.context.fillStyle = "black";
+            renderer.context.fillText("save", saveButton.x+20, saveButton.y+14);
+          };
+          function mouseUp(evName, data) {
+            if (data.target === saveButton) {
+              // Save to storage
+
+              // remove the editor
+              // TODO: figure out the root cause of this
+              if (!editor.parent || !name.parent || !editorWindow.parent) {
+                return;
+              }
+              var req = {
+                contentType: "application/json",
+                dataType : "json",
+                data : JSON.stringify({
+                  name: name.toString(),
+                  code: editor.toString()
+                }),
+                success : function() {
+                  editor.parent.remove(editor);
+                  name.parent.remove(name);
+                  editorWindow.parent.remove(editorWindow);
+                  name.parent === null;
+                  editor.parent === null;
+                  editorWindow = false;
+                }
+              };
+              jQuery.ajax({
+                
+                url: "/nodes/"+name.toString(),
+                success : function() { newNode = false; },
+                error   : function() { newNode = true; },
+                contentType : "application/json",
+                complete : function() {
+                  console.log("new node?" + newNode);
                   req.url = (newNode) ? "/nodes" : "/nodes/" + name.toString();
                   req.type = (newNode) ? "post" : "put";
                   jQuery.ajax(req);
-                  return false;
                 }
-              }
-              saveButton.event.bind("mouse.up", mouseUp);
-              editor.fromString(nodeCode);
+              });
 
-              camera.add(editorWindow.add(editor.add(lineNumbers)).add(name).add(saveButton));
+              return false;
             }
+          }
+          saveButton.event.bind("mouse.up", mouseUp);
+          editor.fromString(nodeCode);
 
-            var terminal = carena.build({
-              x:0,y:renderer.canvas.height-200, width: renderer.canvas.width, height: 200, text: "> spawning terminal..."
-            }, [
-              "carena.Node",
-              "cider.Textual",
-            ]);
-            var _terminalRender = terminal.render;
-            terminal.render = function(renderer) {
-              terminal.y = renderer.canvas.height-200;
-              terminal.width = renderer.canvas.width;
-              _terminalRender(renderer);
-            }
+          camera.add(editorWindow.add(editor.add(lineNumbers)).add(name).add(saveButton));
+        }
 
-            camera.add(terminal);
+        var terminal = carena.build({
+          x:0,y:renderer.canvas.height-200, width: renderer.canvas.width, height: 200, text: "> spawning terminal..."
+        }, [
+          "carena.Node",
+          "cider.Textual",
+        ]);
+        var _terminalRender = terminal.render;
+        terminal.render = function(renderer) {
+          terminal.y = renderer.canvas.height-200;
+          terminal.width = renderer.canvas.width;
+          _terminalRender(renderer);
+        }
 
-            // Console stuff
-            window.addEventListener("keydown", function(ev) {
-              if (ev.keyCode === 13 && editorWindow === false) {
-                terminal.fromString("> executing....");
-                jQuery.get("/flows/THEFLOW/run", function(data) {
-                  terminal.fromString(terminal + "\n> Results:\n\n" + data);
-                });
-              }
+        camera.add(terminal);
+
+        // Console stuff
+        window.addEventListener("keydown", function(ev) {
+          if (ev.keyCode === 13 && editorWindow === false) {
+            terminal.fromString("> executing....");
+            jQuery.get("/flows/THEFLOW/run", function(data) {
+              terminal.fromString(terminal + "\n> Results:\n\n" + data);
             });
+          }
+        });
       });
     </script>
   </head>

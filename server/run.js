@@ -126,10 +126,13 @@ connect.createServer.apply(connect, [
             res.writeHead(404, {"Content-type": "application/json"});
             res.end(JSON.stringify({code: 404, body: "Not Found"}));
           } else {
-            cursor.code = req.body.code;
-            cursor.save(function() {
+            var update = cursor.toObject();
+            console.dir(req.body)
+            update.code = req.body.code;
+            
+            (new Node(update, true)).save(function() {
               res.writeHead("200", {"Content-type" : "application/json"});
-              res.end('{ "status": 204 }');
+              res.end(JSON.stringify(update, null, true));
             });
           }
         });
