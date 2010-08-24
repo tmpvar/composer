@@ -3,7 +3,10 @@
   <head>
     <title>Composer</title>
     <style>
-      body { margin:0px; padding:0px; background: #000;}
+      body { margin:0px; padding:0px; background: #000;}@font-face {
+      @font-family: "ProggyClean";
+        src: url('fonts/ProggyClean.ttf');
+      }
     </style>
     <script type="text/javascript" src="../carena/lib/carena.js"></script>
     <script type="text/javascript" src="lib/composer.js"></script>
@@ -139,26 +142,20 @@
             scene.event.bind("mouse.down", function(name, data) {
               selected = data.target;
             });
-            scene.event.bind("mouse.down.*", function(name,data) {
-              renderer.context.fillColor = "white";
-              var parts = name.split(".");
-              if (parts.length === 3     &&
-                  parts[2] === "2"       &&
-                  editorWindow === false &&
-                  data.target.features)
-              {
-                // double click
-                for (var i=0; i<data.target.features.length; i++) {
-                  if (data.target.features[i] === "composer.Functional") {
-                    jQuery.ajax({
-                      url      : data.target.code,
-                      dataType : "json",
-                      success  : function(codeObj) {
-                        spawnEditor(true, "", codeObj.code);
-                      }
-                    });
-                    break;
-                  }
+            
+            // TODO: woah, this is a global handler. is this a good thing?
+            scene.event.bind("mouse.click.2", function(name,data) {
+              // double click
+              for (var i=0; i<data.target.features.length; i++) {
+                if (data.target.features[i] === "composer.Functional") {
+                  jQuery.ajax({
+                    url      : data.target.code,
+                    dataType : "json",
+                    success  : function(codeObj) {
+                      spawnEditor(true, codeObj.name, codeObj.code);
+                    }
+                  });
+                  break;
                 }
               }
             });
@@ -170,8 +167,8 @@
               if (ctx.canvas.width !== $(window).width() ||
                   ctx.canvas.height != $(window).height()-5)
               {
-                ctx.canvas.width =  $(window).width();//.innerWidth-10;
-                ctx.canvas.height = $(window).height()-5;//window.innerHeight-5;
+                ctx.canvas.width =  $(window).width();
+                ctx.canvas.height = $(window).height()-5;
               }
               camera.render();
               setTimeout(render, 10);
@@ -251,7 +248,13 @@
                       tmp.background = "black";
                     });
 
-                    tmp.event.bind("mouse.down", function() {
+                    tmp.event.bind("mouse.click.2", function() {
+                      chooser.parent.remove(chooser);
+                      chooser = null;
+                      spawnEditor(false, item.name, item.code);
+                    });
+                    tmp.event.bind("mouse.down", function() { return false; });
+                    tmp.event.bind("mouse.click", function(name) {
                       // Build a real node.
                       var rnd = carena.build({x:20, y: 20, width: 100, height:100,
                         color: "rgb(" + (new Date()).getTime()%255 +
@@ -325,6 +328,14 @@
 
 
         function spawnEditor(newNode, nodeName, nodeCode) {
+          // allow only one editor at a time
+          if (editorWindow) {
+            editorWindow.parent.remove(editorWindow);
+            name.parent === null;
+            editor.parent === null;
+            editorWindow = false;
+          }
+
           // spawn a new carena
           editorWindow = carena.build({
             color: "blue",
@@ -433,7 +444,6 @@
                 error   : function() { newNode = true; },
                 contentType : "application/json",
                 complete : function() {
-                  console.log("new node?" + newNode);
                   req.url = (newNode) ? "/nodes" : "/nodes/" + name.toString();
                   req.type = (newNode) ? "post" : "put";
                   jQuery.ajax(req);
