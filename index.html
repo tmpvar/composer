@@ -141,10 +141,10 @@
           },
           complete: function() {
             scene.event.bind("node.dirty", save);
-            scene.event.bind("mouse.down", function(name, data) {
+            scene.event.bind("mouse.click", function(name, data) {
               selected = data.target;
             });
-            
+
             // TODO: woah, this is a global handler. is this a good thing?
             scene.event.bind("mouse.click.2", function(name,data) {
               // double click
@@ -284,7 +284,8 @@
                         "carena.RelativeToParent"
                       ]);
                       label.font.set(defaultFont);
-                      label.setTextOffset({x: 2, y: 2});
+                      label.style.paddingLeft = 2;
+                      label.style.paddingTop = 2;
                       var outport = carena.build({
                         x: rnd.x + (rnd.width/2) - 10,
                         y: rnd.y + rnd.height,
@@ -310,7 +311,8 @@
                       chooser = null;
                     });
 
-                    tmp.setTextOffset({ x: 10, y: 6});
+                    tmp.style.paddingLeft = 10;
+                    tmp.style.paddingTop  = 6;
                     tmp.fromString(item.name);
                     return tmp;
                   }
@@ -366,11 +368,7 @@
             x:110,
             y:110,
             width: 270,
-            height: 20,
-            textOffset : {
-              x: 10,
-              y: 5
-            }
+            height: 20
           },[
             "carena.Node",
             "carena.RelativeToParent",
@@ -390,6 +388,7 @@
             "carena.RelativeToParent"
           ]);
 
+          name.style.paddingLeft = 10;
           name.fromString(nodeName);
           name.setFocus();
           name.font.set(defaultFont);
@@ -441,7 +440,7 @@
                 }
               };
               jQuery.ajax({
-                
+
                 url: "/nodes/"+name.toString(),
                 success : function() { newNode = false; },
                 error   : function() { newNode = true; },
@@ -463,7 +462,7 @@
         }
 
         var terminal = carena.build({
-          x:0,y:renderer.canvas.height-200, width: renderer.canvas.width, height: 200, 
+          x:0,y:renderer.canvas.height-200, width: renderer.canvas.width, height: 200,
           text: document.getElementById("terminal-text").innerText
         }, [
           "carena.Node",
