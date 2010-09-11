@@ -204,7 +204,7 @@
             }
           } else if (ev.keyCode === 32) {
             // Spawn a dialog for choosing a node from the db
-            if (chooser === null) {
+            if (!chooser && !editorWindow) {
               chooser = true;
               jQuery.ajax({
                 url: "/nodes",
@@ -345,7 +345,9 @@
 
           // spawn a new carena
           editorWindow = carena.build({
-            color: "blue",
+            style : {
+              backgroundColor: "blue",
+            },
             x:100, y: 100,
             height: 310,
             width: 400
@@ -384,9 +386,11 @@
             height: 20,
             x:410,
             y:110,
-            color: "grey"
+            style : {
+              backgroundColor: "grey"
+            }
           },[
-            "carena.Node",
+            "carena.Box",
             "carena.Eventable",
             "carena.RelativeToParent"
           ]);
