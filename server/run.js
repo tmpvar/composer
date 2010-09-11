@@ -28,7 +28,7 @@ connect.createServer.apply(connect, [
           res.end(JSON.stringify({code: 404, body: "Not Found"}));
         } else {
           res.writeHead(200, {'Content-type':'application/json'});
-          res.end(cursor.pop().toJSON());
+          res.end(cursor.pop().toJSON(null, "  "));
         }
       });
     });
@@ -66,7 +66,7 @@ connect.createServer.apply(connect, [
 
           child.stdout.on("end", done);
           child.on("exit", done);
-          
+
         }
       });
     });
@@ -129,7 +129,7 @@ connect.createServer.apply(connect, [
             var update = cursor.toObject();
             console.dir(req.body)
             update.code = req.body.code;
-            
+
             (new Node(update, true)).save(function() {
               res.writeHead("200", {"Content-type" : "application/json"});
               res.end(JSON.stringify(update, null, true));
