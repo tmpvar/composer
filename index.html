@@ -21,7 +21,7 @@
             renderer = carena.build({}, ["carena.Renderer"], {
               canvas: document.getElementById("composer"),
               style: {
-                backgroundColor : "rgba(0,0,0,0.3)"
+                backgroundColor : "rgb(0,0,0)"
               }
             }),
             camera = carena.build({},
@@ -186,7 +186,7 @@
             ev.preventDefault();
             ev.stopPropagation();
 
-            if (selected) {
+            if (selected && selected.parent) {
               var parent = selected.parent;
               selected.parent.remove(selected);
               selected = parent.child(0);
@@ -290,7 +290,9 @@
                         y: rnd.y + rnd.height,
                         width: 20,
                         height:10,
-                        color: "green"
+                        style : {
+                          backgroundColor: "green"
+                        }
                       }, [
                         "carena.RelativeToParent", "composer.Port"
                       ]);
@@ -300,7 +302,9 @@
                         y: rnd.y - 10,
                         width: 20,
                         height:10,
-                        color: "red"
+                        style : {
+                          backgroundColor : "red"
+                        }
                       }, [
                         "carena.RelativeToParent", "composer.Port"
                       ]);
