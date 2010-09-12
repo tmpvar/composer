@@ -2,6 +2,7 @@ var connect    = require("connect"),
     mongo      = require("mongoose").Mongoose,
     db         = mongo.connect('mongodb://localhost/composer'),
     spawn      = require("child_process").spawn,
+    jsToPorts  = require("./port").jsToPorts,
     Flow, Node;
 
 mongo.model('Flow',{
@@ -11,7 +12,7 @@ mongo.model('Flow',{
 });
 mongo.model('Node', {
   collection : "nodes",
-  properties : ["name", "code"],
+  properties : ["name", "code", "ports"],
   indexes    : ["name"]
 });
 Flow = db.model('Flow');
@@ -97,10 +98,11 @@ connect.createServer.apply(connect, [
 
     app.post("/nodes", function(req, res, next) {
       if (req.body) {
+        req.body.ports = jsToPorts(req.body.code);
         var node = new Node(req.body, true);
         node.save(function() {
           res.writeHead("201", {"Content-type" : "application/json"});
-          res.end('{ "status": 201 }');
+          res.end(JSON.stringify(node, null, true));
         });
       }
     });
@@ -129,7 +131,7 @@ connect.createServer.apply(connect, [
             var update = cursor.toObject();
             console.dir(req.body)
             update.code = req.body.code;
-
+            update.ports = jsToPorts(req.body.code);
             (new Node(update, true)).save(function() {
               res.writeHead("200", {"Content-type" : "application/json"});
               res.end(JSON.stringify(update, null, true));

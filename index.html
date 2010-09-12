@@ -285,31 +285,37 @@
                       label.font.set(defaultFont);
                       label.style.paddingLeft = 2;
                       label.style.paddingTop = 2;
-                      var outport = carena.build({
-                        x: rnd.x + (rnd.width/2) - 10,
-                        y: rnd.y + rnd.height,
-                        width: 20,
-                        height:10,
-                        style : {
-                          backgroundColor: "green"
-                        }
-                      }, [
-                        "carena.RelativeToParent", "composer.Port"
-                      ]);
 
-                      var inport = carena.build({
-                        x: rnd.x + (rnd.width/2) -  10,
-                        y: rnd.y - 10,
-                        width: 20,
-                        height:10,
-                        style : {
-                          backgroundColor : "red"
-                        }
-                      }, [
-                        "carena.RelativeToParent", "composer.Port"
-                      ]);
 
-                      camera.target.add(rnd.add(label).add(inport).add(outport));
+                      for (var i=0; i<item.ports[1]; i++) {
+                        rnd.add(carena.build({
+                          x: rnd.x + (i*25)+10,
+                          y: rnd.y + rnd.height,
+                          width: 20,
+                          height:10,
+                          style : {
+                            backgroundColor: "green"
+                          }
+                        }, [
+                          "carena.RelativeToParent", "composer.Port"
+                        ]));
+                      }
+
+                      for (var j=0; j<item.ports[0]; j++) {
+                        rnd.add(carena.build({
+                          x: rnd.x + (j*22),
+                          y: rnd.y - 10,
+                          width: 20,
+                          height:10,
+                          style : {
+                            backgroundColor : "red"
+                          }
+                        }, [
+                          "carena.RelativeToParent", "composer.Port"
+                        ]));
+                      }
+
+                      camera.target.add(rnd.add(label));
                       chooser.parent.remove(chooser);
                       chooser = null;
                     });
