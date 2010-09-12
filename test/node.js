@@ -23,28 +23,23 @@ var ok = function(logic, failmsg)
     }
 }
 
-
 // Port generation
 var portTests = [
   'function() {\n  return \"world\";\n}',[0,1],
   'function(str) { return str; }',[1,1],
+  'function(str, fn) { setTimeout(function() { fn("hello!"); })}',[1,1]
+
+  // TODO: is this required? maybe we can have dynamic ports
+  //'function() { setTimeout(function() { arguments[0]("hello!"); })}',[1,1]
 ], res, i;
 
 for (i=0; i<portTests.length; i+=2) {
-  try {
-    res = port.jsToPorts(portTests[i]);
-    console.dir(res);
-  } catch (e) {
-  console.log("WTF!");
-    console.log(e);
-  }
+  res = port.jsToPorts(portTests[i]);
   ok(res[0] === portTests[i+1][0], 
      "in-ports for '" + portTests[i] + "' should be " + portTests[i+1][0]);
-
   ok(res[1] === portTests[i+1][1],
      "out-ports for '" + portTests[i] + "' should be " + portTests[i+1][1]);
 }
-
 
 sys.puts(JSON.stringify({
  total: pass+fail,
