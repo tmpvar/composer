@@ -35,10 +35,14 @@ var portTests = [
 
 for (i=0; i<portTests.length; i+=2) {
   res = port.jsToPorts(portTests[i]);
-  ok(res[0] === portTests[i+1][0], 
-     "in-ports for '" + portTests[i] + "' should be " + portTests[i+1][0]);
-  ok(res[1] === portTests[i+1][1],
-     "out-ports for '" + portTests[i] + "' should be " + portTests[i+1][1]);
+
+  ok(res['in'].length === portTests[i+1][0], 
+     "in-ports for '" + portTests[i] + "' should be " + portTests[i+1][0] +
+     " not " + res['in'].length);
+
+  ok(res['out'].length === portTests[i+1][1],
+     "out-ports for '" + portTests[i] + "' should be " + portTests[i+1][1] + 
+     " not " + res['out'].length);
 }
 
 sys.puts(JSON.stringify({

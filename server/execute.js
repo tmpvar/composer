@@ -51,7 +51,9 @@ stdin.on('end', function() {
 
           response.on("end", function() {
             total--;
-            node.source = JSON.parse(nodeCode).code;
+            var tmpnode = JSON.parse(nodeCode);
+            node.source = tmpnode.code;
+            node.ports = tmpnode.ports;
             // TODO: too much assumption here..
             var toRun = "(function(){ return " + node.source + "})()";
             var context = { fn : null};
@@ -59,20 +61,15 @@ stdin.on('end', function() {
             // TODO: this only works with return :/ need to fix
             composition[id].push(Script.runInThisContext(toRun, context));
 
-            var num = 0;
             node.children.forEach(function(child) {
               if (child.features) {
                 child.features.forEach(function(feature) {
                   if (feature === "composer.Port") {
-                    refs[child.settings.myId] = node.conductorId;
-                    if (num>0) {
-                      if (node.source.indexOf("return ") == -1) {
-                        refs[child.settings.myId] += (num-1);
-                      } else {
-                        refs[child.settings.myId] += num;
-                      }
-                    }
-                    num++;
+                    refs[child.settings.myId] = {
+                      parentId: node.settings.myId,
+                      port: child.settings.port,
+                      conductorId: node.conductorId
+                    };
                   }
                 });
               }
@@ -96,25 +93,37 @@ stdin.on('end', function() {
   // finally, execute the flow
   function execute() {
 
+    // Meanwhile, back at the bat cave..
+    var flowable = {}
+    // Now connect the pipes, yay!
+    pipes.forEach(function(pipe) {
+      var source, target = refs[pipe.settings.target], offset = 1;
+      
+      // Figure out which direction this pipe is actually going to flow
+      if (target.port.direction === "out") {
+        source = refs[pipe.settings.target];
+        target = refs[pipe.settings.source]
+      } else {
+        source = refs[pipe.settings.source];
+      }
+      
+      if (source.port.type === "callback") {
+        offset = 0;
+      }
 
-  // Meanwhile, back at the bat cave..
-  var flowable = {}
-  // Now connect the pipes, yay!
-  pipes.forEach(function(pipe) {
-    var source = refs[pipe.settings.source],
-        target = refs[pipe.settings.target];
-    if (!flowable[target]) {
-      flowable[target] = [];
-    }
-    flowable[target].push(source);
-  });
+      if (!flowable[target]) {
+        flowable[target.conductorId] = [];
+      }
+      var portId = source.conductorId + (source.port.portIndex + offset);
+      flowable[target.conductorId].push(portId);
+    });
 
-  flowable.forEach(function(performer, flow) {
-    Array.prototype.unshift.apply(composition[flow], performer);
-  })
+    flowable.forEach(function(performer, flow) {
+      Array.prototype.unshift.apply(composition[flow], performer);
+    })
 
     try {
-/*      console.log("{");
+      console.log("{");
       var parts = []
       composition.forEach(function(part, k) {
         var p = k +': ["' + part.join('","') + "]"
@@ -122,7 +131,7 @@ stdin.on('end', function() {
       });
 
       console.log(parts.join(",") + "\n}");
-*/
+
       Conduct(composition)();
     } catch (e) {
       console.dir(e);

@@ -1,16 +1,32 @@
 var parse = require("./parser").parser.parse;
 
 module.exports.jsToPorts = function(js) {
-  var ip=0,op=0, res;
-  recurse(parse(js),
-          function(v) { ip+=v; },
-          function(v) { op+=v; });
-  return [ip, op];
+  var ip=[],op=[], res = {
+   'in'  : {},
+   'out' : {},
+   inLength : 0,
+   outLength : 0
+  }
+  recurse(parse(js), res);
+  
+  // Clean up the results
+  
+  for (var inp in res['in']) {
+    var item = res['in'][inp];
+    ip[item.portIndex] = item;
+  }
+
+  for (var outp in res['out']) {
+    var item = res['out'][outp];
+    op[item.portIndex] = item;
+  }
+
+  return { 'in' : ip, 'out' : op };
 };
 
 // Roll down the results
 
-function recurse(structure, infn, outfn, scope) {
+function recurse(structure, data, scope) {
   if (!structure || !structure.type) { return; }
   var i=0, l;
 
@@ -30,9 +46,17 @@ function recurse(structure, infn, outfn, scope) {
                {args:{}};
 
       if (structure.params && structure.params.length > 0) {
-        infn(structure.params.length);
         l = structure.params.length
         for (i=0; i<l; i++) {
+
+          data['in'][structure.params[i]] = {
+            name      : structure.params[i],
+            type      : "argument",
+            direction : "in",
+            portIndex : data.inLength
+          };
+          data.inLength++;
+
           scope.args[structure.params[i]] = true;
         }
       }
@@ -40,17 +64,34 @@ function recurse(structure, infn, outfn, scope) {
 
     case 'FunctionCall':
       if (structure.name.name && scope.args[structure.name.name]) {
-        infn(-1);
-        outfn(1);
+        
+        if (data['in'][structure.name.name]) {
+          delete data['in'][structure.name.name];
+          data.inLength--;
+        }
+
+        data['out'][structure.name.name] = {
+          name      : structure.name.name,
+          type      : "callback",
+          direction : "out",
+          portIndex : data.outLength
+        };
+        data.outLength++;
       }
       l = structure.arguments.length;
       for (i=0; i<l; i++) {
-        recurse(structure.arguments[i], infn, outfn, scope);
+        recurse(structure.arguments[i], data, scope);
       }
     break;
 
     case 'ReturnStatement':
-      outfn(1);
+      data['out']["return"] = {
+        name      : "return",
+        type      : "return",
+        direction : "out",
+        portIndex : data.outLength
+      };
+      data.outIndex++;
     break;
   }
 
@@ -58,7 +99,7 @@ function recurse(structure, infn, outfn, scope) {
   if (structure.elements) {
     l=structure.elements.length;
     for (i=0; i<l; i++) {
-      recurse(structure.elements[i], infn, outfn, scope);
+      recurse(structure.elements[i], data, scope);
     }
   }
 }

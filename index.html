@@ -286,22 +286,24 @@
                       label.style.paddingLeft = 2;
                       label.style.paddingTop = 2;
 
-
-                      for (var i=0; i<item.ports[1]; i++) {
+console.log(item.ports);
+                      for (var i=0; i<item.ports['out'].length; i++) {
+                      
                         rnd.add(carena.build({
-                          x: rnd.x + (i*25)+10,
+                          x: rnd.x + (i*22),
                           y: rnd.y + rnd.height,
                           width: 20,
                           height:10,
                           style : {
                             backgroundColor: "green"
-                          }
+                          },
+                          port : item.ports['out'][i]
                         }, [
                           "carena.RelativeToParent", "composer.Port"
                         ]));
                       }
 
-                      for (var j=0; j<item.ports[0]; j++) {
+                      for (var j=0; j<item.ports['in'].length; j++) {
                         rnd.add(carena.build({
                           x: rnd.x + (j*22),
                           y: rnd.y - 10,
@@ -309,14 +311,17 @@
                           height:10,
                           style : {
                             backgroundColor : "red"
-                          }
+                          },
+                          port : item.ports['in'][i]
                         }, [
                           "carena.RelativeToParent", "composer.Port"
                         ]));
                       }
 
                       camera.target.add(rnd.add(label));
-                      chooser.parent.remove(chooser);
+                      if (chooser.parent) {
+                        chooser.parent.remove(chooser);
+                      }
                       chooser = null;
                     });
 
