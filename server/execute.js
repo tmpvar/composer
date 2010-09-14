@@ -98,7 +98,7 @@ stdin.on('end', function() {
     // Now connect the pipes, yay!
     pipes.forEach(function(pipe) {
       var source, target = refs[pipe.settings.target], offset = 1;
-      
+
       // Figure out which direction this pipe is actually going to flow
       if (target.port.direction === "out") {
         source = refs[pipe.settings.target];
@@ -106,7 +106,7 @@ stdin.on('end', function() {
       } else {
         source = refs[pipe.settings.source];
       }
-      
+
       if (source.port.type === "callback") {
         offset = 0;
       }
@@ -123,7 +123,7 @@ stdin.on('end', function() {
     })
 
     try {
-      console.log("{");
+/*      console.log("{");
       var parts = []
       composition.forEach(function(part, k) {
         var p = k +': ["' + part.join('","') + "]"
@@ -131,7 +131,7 @@ stdin.on('end', function() {
       });
 
       console.log(parts.join(",") + "\n}");
-
+*/
       Conduct(composition)();
     } catch (e) {
       console.dir(e);
