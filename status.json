@@ -1,17 +1,25 @@
 {
   "desc" : "Planning",
   "todo" : [
-    "build node ports from the arguments of functions",
-    "build pipes, using some wireit code",
+    "clean up click/double click",
+    "Re-engineer conductor to support multiple callbacks and events",
+    "Nested flows",
+    "Flow navigation",
+    "Gnome-do type searching for menuing (add/remove nodes, find flows, etc)",
+    "Minimap for showing the user where they are in the current flow",
+    "Scale on scroll",
+    "[Collaboration] use long poll to allow multiple people to edit a flow at a time",
     "implement composition in the form of drilling into composites",
     "make conductor work on a-grade browsers if it doesn't already."
   ],
   "done" : [
+    "build node ports from the arguments of functions",
     "first round displaying of ports",
     "Get basic drag 'n drop working",
     "Setup git repo"
   ],
   "nope" : [
+    "build pipes, using some wireit code",
     "Build minimal scene graph"
   ]
 }
