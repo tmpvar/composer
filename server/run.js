@@ -3,7 +3,7 @@ var connect    = require("connect"),
     db         = mongo.connect('mongodb://localhost/composer'),
     spawn      = require("child_process").spawn,
     jsToPorts  = require("./port").jsToPorts,
-    Flow, Node;
+    Flow, Node, eventListeners = [];
 
 mongo.model('Flow',{
   collection : "flows",
@@ -17,6 +17,16 @@ mongo.model('Node', {
 });
 Flow = db.model('Flow');
 Node = db.model('Node');
+
+function notifyListeners(data) {
+
+  while (eventListeners.length > 0) {
+console.log(eventListeners.length);
+    var listener = eventListeners.pop();
+    listener.writeHead(200, {'Content-type':'application/json'});
+    listener.end(JSON.stringify(data, null, "  "));
+  }
+}
 
 connect.createServer.apply(connect, [
 //  connect.logger(),
@@ -77,7 +87,6 @@ connect.createServer.apply(connect, [
         req.body.name = "THEFLOW";
         req.body._id = 123123123;
         var flow = new Flow(req.body, true);
-
         flow.save(function() {
           res.writeHead("201",{"Content-type" : "application/json"});
           res.end('{ "status": 201}');
@@ -139,6 +148,17 @@ connect.createServer.apply(connect, [
           }
         });
       }
+    });
+    
+    // all events
+    app.get("/events", function(req, res, next) {
+      eventListeners.push(res);
+    });
+
+    app.post("/events", function(req, res, next) {
+      notifyListeners(req.body);
+      res.writeHead(201);
+      res.end();
     });
   }),
 
