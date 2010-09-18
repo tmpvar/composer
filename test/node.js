@@ -27,7 +27,8 @@ var ok = function(logic, failmsg)
 var portTests = [
   'function() {\n  return \"world\";\n}',[0,1],
   'function(str) { return str; }',[1,1],
-  'function(str, fn) { setTimeout(function() { fn("hello!"); })}',[1,1]
+  'function(str, fn) { setTimeout(function() { fn("hello!"); })}',[1,1],
+  'function(cb1, str, cb2) { var v = cb1(str); return cb2(v); }',[1,2]
 
   // TODO: is this required? maybe we can have dynamic ports
   //'function() { setTimeout(function() { arguments[0]("hello!"); })}',[1,1]
