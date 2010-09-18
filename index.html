@@ -36,15 +36,14 @@
             scene;
 
         var fromTransport = function(obj) {
-          obj.scene = obj.scene || { settings : {} };
-
-          var flow = carena.build(obj.scene.settings,
+          //obj.scene = obj.scene || {};
+          var flow = carena.build({x:0, y:0, width: 100, height: 100, color: 'darkgrey'},
           [
             "carena.Node",
             "carena.Eventable",
             "carena.Draggable",
             "carena.RelativeToParent"
-          ], obj.scene.settings);
+          ], {});//obj.scene.settings || {});
 
           function recurse(node, data) {
             if (data.children && data.children.length > 0) {
@@ -99,13 +98,13 @@
             return transport;
           }
 
-          res.scene = recurse(branch);
+          res.scene = recurse(branch).children;
           return res;
         };
 
         var saving = false;
         function save() {
-          if (!saving && 1===0) {
+          if (!saving) {
             saving = true;
             jQuery.ajax({
               type : "post",
@@ -128,42 +127,6 @@
             scene.width=0;
             scene.height=0;
             scene.containsPoint = function() { return true; }
-
-            // Collaboration
-            scene.event.bind("drag.move",function(name, data) {
-              // Dehydrate the data
-              data.source = {
-                id : data.source.myId,
-                x  : data.source.x,
-                y  : data.source.y
-              }
-              data.target = data.target.myId;
-              for (var o in data.collisions) {
-                data.collisions[o] = data.collisions[o].myId;
-              }
-              data.name = name;
-              $.ajax({
-                url : "/events",
-                type : "post",
-                contentType : "application/json",
-                data: JSON.stringify(data)
-              })
-            });
-
-            // Collaboration
-            scene.event.bind("node.add",function(name, data) {
-              d = toTransport(data.child);
-              d.name = name;
-              d.parent = { id: data.node.myId };
-
-              $.ajax({
-                url : "/events",
-                type : "post",
-                contentType : "application/json",
-                data: JSON.stringify(d)
-              })
-            });            
-            
           },
           error : function() {
             scene = carena.build({
@@ -320,6 +283,7 @@
                       label.style.paddingLeft = 2;
                       label.style.paddingTop = 2;
 
+console.log(item.ports);
                       for (var i=0; i<item.ports['out'].length; i++) {
                       
                         rnd.add(carena.build({
@@ -538,52 +502,7 @@
               terminal.fromString(terminal + "\n> Results:\n\n" + data);
             });
           }
-        }, true);
-        
-
-        
-        
-        function longPoll() {
-          $.ajax({
-            url : "/events",
-            dataType: "json",
-            type: 'get',
-            success : function(data) {
-              if (data.name) {
-                switch (data.name) {
-                  case "drag.move":
-                    scene.descend(function(node) {
-                      if (node &&
-                          node.myId && 
-                          node.myId === data.source.id)
-                      {
-                        node.x = data.source.x;
-                        node.y = data.source.y;
-                        return false;
-                      }
-                    });
-                  break;
-                  case "node.add":
-                    if (scene.child(scene.children.length - 1).myId !== 
-                        data.scene.settings.myId)
-                    {
-                      var newNode = fromTransport(data);
-                      scene.add(newNode);
-                    }
-                  break;
-                }
-              
-              
-              }
-              
-            },
-            complete : function() {
-              longPoll();
-            }
-          });
-        }
-        setTimeout(longPoll, 100);
-        
+        });
       });
     </script>
   </head>
