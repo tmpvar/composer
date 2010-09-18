@@ -4,21 +4,16 @@ module.exports.jsToPorts = function(js) {
   var ip=[],op=[], res = {
    'in'  : {},
    'out' : {},
-   inLength : 0,
-   outLength : 0
   }
   recurse(parse(js), res);
-  
+
   // Clean up the results
-  
   for (var inp in res['in']) {
-    var item = res['in'][inp];
-    ip[item.portIndex] = item;
+    ip.push(res['in'][inp]);
   }
 
   for (var outp in res['out']) {
-    var item = res['out'][outp];
-    op[item.portIndex] = item;
+    op.push(res['out'][outp]);
   }
 
   return { 'in' : ip, 'out' : op };
@@ -53,9 +48,7 @@ function recurse(structure, data, scope) {
             name      : structure.params[i],
             type      : "argument",
             direction : "in",
-            portIndex : data.inLength
           };
-          data.inLength++;
 
           scope.args[structure.params[i]] = true;
         }
@@ -64,23 +57,32 @@ function recurse(structure, data, scope) {
 
     case 'FunctionCall':
       if (structure.name.name && scope.args[structure.name.name]) {
-        
         if (data['in'][structure.name.name]) {
           delete data['in'][structure.name.name];
-          data.inLength--;
         }
 
         data['out'][structure.name.name] = {
           name      : structure.name.name,
           type      : "callback",
           direction : "out",
-          portIndex : data.outLength
         };
-        data.outLength++;
       }
       l = structure.arguments.length;
       for (i=0; i<l; i++) {
         recurse(structure.arguments[i], data, scope);
+      }
+    break;
+
+    case "VariableDeclaration":
+      recurse(structure.value, data, scope);
+    break;
+
+    case "VariableStatement":
+      if (structure.declarations) {
+        var dd = 0, dl = structure.declarations.length;
+        for (dd; dd<dl; dd++) {
+          recurse(structure.declarations[dd], data, scope);
+        }
       }
     break;
 
@@ -89,10 +91,17 @@ function recurse(structure, data, scope) {
         name      : "return",
         type      : "return",
         direction : "out",
-        portIndex : data.outLength
       };
-      data.outIndex++;
+
+      if (structure.value) {
+        recurse(structure.value, data, scope);
+      }
+      
     break;
+  }
+
+  if (structure.value && structure.value.type) {
+    recurse(structure.value, data, scope);
   }
 
   // Continue down if there are more children elements
