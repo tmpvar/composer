@@ -58,6 +58,9 @@
                   height:100
                 };
                 var built = carena.build(current.settings, current.features, current.settings);
+                if (built.font) {
+                  built.font.set(defaultFont);
+                }
                 node.add(recurse(built, current));
               }
             }
@@ -283,7 +286,6 @@
                       label.style.paddingLeft = 2;
                       label.style.paddingTop = 2;
 
-console.log(item.ports);
                       for (var i=0; i<item.ports['out'].length; i++) {
                       
                         rnd.add(carena.build({
