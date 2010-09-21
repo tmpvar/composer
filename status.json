@@ -1,7 +1,6 @@
 {
   "desc" : "Planning",
   "todo" : [
-    "clean up click/double click",
     "Re-engineer conductor to support multiple callbacks and events",
     "Nested flows",
     "Flow navigation",
@@ -13,6 +12,7 @@
     "make conductor work on a-grade browsers if it doesn't already."
   ],
   "done" : [
+    "clean up click/double click",
     "build node ports from the arguments of functions",
     "first round displaying of ports",
     "Get basic drag 'n drop working",
