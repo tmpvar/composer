@@ -1,36 +1,22 @@
 var connect    = require("connect"),
-    mongo      = require("mongoose").Mongoose,
-    db         = mongo.connect('mongodb://localhost/composer'),
+    keys       = require("keys"),
+    store      = new keys.Memory(
     spawn      = require("child_process").spawn,
-    jsToPorts  = require("./port").jsToPorts,
-    Flow, Node;
-
-mongo.model('Flow',{
-  collection : "flows",
-  properties : ["name"],
-  indexes    : ["name"]
-});
-mongo.model('Node', {
-  collection : "nodes",
-  properties : ["name", "code", "ports"],
-  indexes    : ["name"]
-});
-Flow = db.model('Flow');
-Node = db.model('Node');
+    jsToPorts  = require("./port").jsToPorts;
 
 connect.createServer.apply(connect, [
-//  connect.logger(),
+  connect.logger(),
   connect.bodyDecoder(),
   connect.router(function(app) {
-    app.get("/flows/:name", function(req, res, next) {
-      Flow.find({name: req.params.name}).all(function(cursor) {
-        if (!cursor || cursor.length === 0) {
+    app.get("/:name", function(req, res, next) {
+      store.get(req.params.name, function(err, data) {
+        if (err) {
           res.writeHead(404, {'Content-type':'application/json'});
           res.end(JSON.stringify({code: 404, body: "Not Found"}));
-        } else {
-          res.writeHead(200, {'Content-type':'application/json'});
-          res.end(cursor.pop().toJSON(null, "  "));
+          return;
         }
+        res.writeHead(200, {'Content-type':'application/json'});
+        res.end(cursor.pop().toJSON(null, "  "));
       });
     });
 
@@ -75,7 +61,6 @@ connect.createServer.apply(connect, [
     app.post("/flows", function(req, res, next) {
       if (req.body) {
         req.body.name = "THEFLOW";
-        req.body._id = 123123123;
         var flow = new Flow(req.body, true);
 
         flow.save(function() {

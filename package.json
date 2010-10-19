@@ -1,0 +1,21 @@
+{
+  "name": "composer",
+  "description": "Visually describe functionality, and then execute it",
+  "version": "0.1.0",
+  "keywords": [ "visual programming", "control/data flow" ],
+  "maintainers": [
+    { "name": "Elijah Insua", "web": "http://tmpvar.com" }
+  ],
+  "contributors": [
+    { "name": "Elijah Insua", "web": "http://tmpvar.com" }
+  ],
+  "licenses": [ "MIT" ],
+  "repositories": {
+    "type": "git",
+    "url": "http://github.com//composer.git"
+  },
+  "dependencies": {
+    "keys"     : "0.1.2",
+    "backbone" : "0.1.1"
+  }
+}
