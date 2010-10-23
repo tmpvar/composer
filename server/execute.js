@@ -1,7 +1,7 @@
 var stdin = process.openStdin(),
     http  = require("http"),
     url   = require("url"),
-    Conduct = require(__dirname + "/../../conductor/lib/conductor"),
+    conductor = require("conductor").conductor,
     data = "",
     rawObject,
     Script = process.binding("evals").Script;

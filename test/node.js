@@ -1,52 +1,49 @@
-var sys    = require("sys"),
-    port = require("../server/port");
+var port = require("../server/port"),
+    tests = [], pass = 0, fail = 0,
+    ok = function(logic, failmsg) {
+      var test = {
+        pass: logic,
+        msg : failmsg,
+      };
 
-var tests = [], pass = 0, fail = 0;
-var ok = function(logic, failmsg)
-{
-    var test = {
-      pass: logic,
-      msg : failmsg,
-    }
+      tests.push(test);
 
-    tests.push(test);
-
-    if (!logic) {
-      try {
-        throw new Error(failmsg);
-      } catch (e) {
-        console.log(e.stack);
-        fail++;
+      if (!logic) {
+        try {
+          throw new Error(failmsg);
+        } catch (e) {
+          console.log(e.stack);
+          fail++;
+        }
+      } else {
+        pass++;
       }
-    } else {
-      pass++;
-    }
-}
+  },
 
 // Port generation
-var portTests = [
-  'function() {\n  return \"world\";\n}',[0,1],
-  'function(str) { return str; }',[1,1],
-  'function(str, fn) { setTimeout(function() { fn("hello!"); })}',[1,1],
-  'function(cb1, str, cb2) { var v = cb1(str); return cb2(v); }',[1,3]
+  portTests = [
+    'function() {\n  return \"world\";\n}',[0,1],
+    'function(str) { return str; }',[1,1],
+    'function(str, fn) { setTimeout(function() { fn("hello!"); })}',[1,1],
+    'function(cb1, str, cb2) { var v = cb1(str); return cb2(v); }',[1,3]
 
-  // TODO: is this required? maybe we can have dynamic ports
-  //'function() { setTimeout(function() { arguments[0]("hello!"); })}',[1,1]
-], res, i;
+    // TODO: is this required? maybe we can have dynamic ports
+    //'function() { setTimeout(function() { arguments[0]("hello!"); })}',[1,1]
+  ], res, i;
 
 for (i=0; i<portTests.length; i+=2) {
   res = port.jsToPorts(portTests[i]);
 
-  ok(res['in'].length === portTests[i+1][0], 
+  ok(res['in'].length === portTests[i+1][0],
      "in-ports for '" + portTests[i] + "' should be " + portTests[i+1][0] +
      " not " + res['in'].length);
 
   ok(res['out'].length === portTests[i+1][1],
-     "out-ports for '" + portTests[i] + "' should be " + portTests[i+1][1] + 
+     "out-ports for '" + portTests[i] + "' should be " + portTests[i+1][1] +
      " not " + res['out'].length);
 }
 
-sys.puts(JSON.stringify({
+console.log(JSON.stringify({
  total: pass+fail,
  fail: fail,
  pass: pass
