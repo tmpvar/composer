@@ -79,6 +79,8 @@
 
         var toTransport = function(branch) {
           var res = {
+            type : "flow",
+            name : "THEFLOW",
             scene : {}
           };
 
@@ -111,7 +113,7 @@
             saving = true;
             jQuery.ajax({
               type : "post",
-              url  : "/flows/",
+              url  : "/nodes/",
               data : JSON.stringify(toTransport(scene)),
               contentType : "application/json",
               complete : function(data) {
@@ -122,7 +124,7 @@
         }
         var selected = null;
         jQuery.ajax({
-          url : "/flows/THEFLOW",
+          url : "/nodes/THEFLOW",
           dataType: "json",
           success : function(data) {
             scene = fromTransport(data);
@@ -132,11 +134,16 @@
             scene.containsPoint = function() { return true; }
           },
           error : function() {
-            scene = carena.build({
-              x:10, y: 10, width: 160, height: 160,
-              style : { backgroundColor:"red" }
-            },
-            ["carena.Node","carena.Eventable", "carena.Draggable"])
+            // Create THEFLOW
+            jQuery.ajax({
+              type : "post",
+              url  : "/nodes/",
+              data : { name: "THEFLOW", type: "flow" },
+              success  : function() {
+                window.location.reload();
+              }
+
+            });
           },
           complete: function() {
             scene.event.bind("node.dirty", save);
@@ -211,7 +218,7 @@
                 dataType: "json",
                 success: function(data) {
 
-                  var l = data.length, h = 30, w = 300;
+                  var keys = Object.keys(data), l = keys.length, h = 30, w = 300;
                   chooser = carena.build({
                     x: 10,
                     y: 10,
@@ -287,7 +294,7 @@
                       label.style.paddingTop = 2;
 
                       for (var i=0; i<item.ports['out'].length; i++) {
-                      
+
                         rnd.add(carena.build({
                           x: rnd.x + (i*22),
                           y: rnd.y + rnd.height,
@@ -331,7 +338,7 @@
                   }
 
                   for (var i=0; i<l; i++) {
-                    chooser.add(buildSelectionNode(data[i]));
+                    chooser.add(buildSelectionNode(data[keys[i]]));
                   }
                 }
               });
@@ -500,7 +507,7 @@
         window.addEventListener("keydown", function(ev) {
           if (ev.keyCode === 13 && editorWindow === false) {
             terminal.fromString("> executing....");
-            jQuery.get("/flows/THEFLOW/run", function(data) {
+            jQuery.get("/nodes/THEFLOW/run", function(data) {
               terminal.fromString(terminal + "\n> Results:\n\n" + data);
             });
           }
