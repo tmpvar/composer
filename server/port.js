@@ -31,7 +31,7 @@ function recurse(structure, data, scope) {
     case 'Program':
       scope = {};
     break;
-
+    
     case 'Function':
       /*
         if we're already handling an outer function, keep the scope around
@@ -40,7 +40,12 @@ function recurse(structure, data, scope) {
                scope        :
                {args:{}};
 
-      if (structure.params && structure.params.length > 0) {
+
+
+      if (!scope.collectedArgs && 
+          structure.params     &&
+          structure.params.length > 0)
+      {
         l = structure.params.length
         for (i=0; i<l; i++) {
 
@@ -53,20 +58,34 @@ function recurse(structure, data, scope) {
           scope.args[structure.params[i]] = true;
         }
       }
+      scope.collectedArgs = true;
+
+      if (structure.elements) {
+        var el = structure.elements.length;
+        for (i=0; i<el; i++) {
+          recurse(structure.elements[i], data, scope);
+        }
+      
+      }
     break;
 
     case 'FunctionCall':
+
       if (structure.name.name && scope.args[structure.name.name]) {
         if (data['in'][structure.name.name]) {
           delete data['in'][structure.name.name];
         }
-
         data['out'][structure.name.name] = {
           name      : structure.name.name,
           type      : "callback",
           direction : "out",
         };
       }
+      
+      if (structure.name.base) {
+        recurse(structure.name.base, data, scope);
+      }
+      
       l = structure.arguments.length;
       for (i=0; i<l; i++) {
         recurse(structure.arguments[i], data, scope);
@@ -83,6 +102,12 @@ function recurse(structure, data, scope) {
         for (dd; dd<dl; dd++) {
           recurse(structure.declarations[dd], data, scope);
         }
+      }
+    break;
+
+    case 'PropertyAccess':
+      if (structure.base) {
+        recurse(structure.base, data, scope);
       }
     break;
 

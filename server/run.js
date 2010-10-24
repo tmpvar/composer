@@ -36,23 +36,33 @@ var connect    = require("connect"),
     "type": "flow",
     "name": "THEFLOW",
     "nodes": {
-      "4fad21a9-0b43-6178-8092-12dd552cb9b0": {
-        "name": "out",
+      "bc552d91-aab6-7e5a-d336-486ceb714a33": {
+        "name": "http respond",
         "options": {
-          "x": 393,
-          "y": 216,
+          "x": 295,
+          "y": 344,
           "style": {
-            "backgroundColor": "rgb(249, 128,2)"
+            "backgroundColor": "rgb(202, 128,43)"
           }
         }
       },
-      "49671184-988c-5b4d-18a2-6df3d6903f15": {
-        "name": "hello",
+      "f502d984-0159-1835-be80-30271b752e27": {
+        "name": "http server",
         "options": {
-          "x": 393,
-          "y": 72,
+          "x": 293,
+          "y": 177,
           "style": {
-            "backgroundColor": "rgb(111, 128,9)"
+            "backgroundColor": "rgb(246, 128,83)"
+          }
+        }
+      },
+      "02d3fef4-d3ab-90f4-2b7b-57385e7f634a": {
+        "name": "port 10017",
+        "options": {
+          "x": 292,
+          "y": 26,
+          "style": {
+            "backgroundColor": "rgb(78, 128,53)"
           }
         }
       }
@@ -60,21 +70,114 @@ var connect    = require("connect"),
     "pipes": [
       {
         "source": {
-          "id": "49671184-988c-5b4d-18a2-6df3d6903f15",
+          "id": "02d3fef4-d3ab-90f4-2b7b-57385e7f634a",
           "port": [
             "out",
             "return"
           ]
         },
         "target": {
-          "id": "4fad21a9-0b43-6178-8092-12dd552cb9b0",
+          "id": "f502d984-0159-1835-be80-30271b752e27",
           "port": [
             "in",
-            "data"
+            "port"
+          ]
+        }
+      },
+      {
+        "source": {
+          "id": "f502d984-0159-1835-be80-30271b752e27",
+          "port": [
+            "out",
+            "response"
+          ]
+        },
+        "target": {
+          "id": "bc552d91-aab6-7e5a-d336-486ceb714a33",
+          "port": [
+            "in",
+            "res"
+          ]
+        }
+      },
+      {
+        "source": {
+          "id": "f502d984-0159-1835-be80-30271b752e27",
+          "port": [
+            "out",
+            "request"
+          ]
+        },
+        "target": {
+          "id": "bc552d91-aab6-7e5a-d336-486ceb714a33",
+          "port": [
+            "in",
+            "req"
           ]
         }
       }
     ]
+  },
+  "http server": {
+    "name": "http server",
+    "code": "function(port, request, response) {\n  require(\"http\").createServer(function(res, res) {\n    request(req);\n    response(res); \n  }); \n}",
+    "type": "js",
+    "ports": {
+      "in": [
+        {
+          "name": "port",
+          "type": "argument",
+          "direction": "in"
+        }
+      ],
+      "out": [
+        {
+          "name": "request",
+          "type": "callback",
+          "direction": "out"
+        },
+        {
+          "name": "response",
+          "type": "callback",
+          "direction": "out"
+        }
+      ]
+    }
+  },
+  "port 10017": {
+    "name": "port 10017",
+    "code": "function() { return 10017; }",
+    "type": "js",
+    "ports": {
+      "in": [],
+      "out": [
+        {
+          "name": "return",
+          "type": "return",
+          "direction": "out"
+        }
+      ]
+    }
+  },
+  "http respond": {
+    "name": "http respond",
+    "code": "function(req, res) {\n res.writeHead(200, { \"Content-type\": \"text/plain\"});\n res.end(\"hello!\");\n}",
+    "type": "js",
+    "ports": {
+      "in": [
+        {
+          "name": "req",
+          "type": "argument",
+          "direction": "in"
+        },
+        {
+          "name": "res",
+          "type": "argument",
+          "direction": "in"
+        }
+      ],
+      "out": []
+    }
   }
 };
 
