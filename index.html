@@ -163,13 +163,10 @@
 
                        for (var i=0; i<targetPorts.length; i++) {
                         port = targetPorts[i];
-                        console.log(port.direction);
                         if (port.direction === pipe.target.port[0] &&
                             port.name === pipe.target.port[1])
                         {
-                          console.log("setup target");
                           pipeObj.target = port;
-                          
                           // parent the pipe so it will get rendered
                           var source = pipeObj.source, target = pipeObj.target;
                           var commonParent = carena.commonAncestor(source,
