@@ -1,7 +1,82 @@
 var connect    = require("connect"),
     spawn      = require("child_process").spawn,
     jsToPorts  = require("./port").jsToPorts,
-    nodes      = {};
+    nodes      = {
+  "hello": {
+    "name": "hello",
+    "code": "function() {\n return \"hello\";\n}",
+    "type": "js",
+    "ports": {
+      "in": [],
+      "out": [
+        {
+          "name": "return",
+          "type": "return",
+          "direction": "out"
+        }
+      ]
+    }
+  },
+  "out": {
+    "name": "out",
+    "code": "function(data) { console.log(data); }",
+    "type": "js",
+    "ports": {
+      "in": [
+        {
+          "name": "data",
+          "type": "argument",
+          "direction": "in"
+        }
+      ],
+      "out": []
+    }
+  },
+  "THEFLOW": {
+    "type": "flow",
+    "name": "THEFLOW",
+    "nodes": {
+      "4fad21a9-0b43-6178-8092-12dd552cb9b0": {
+        "name": "out",
+        "options": {
+          "x": 393,
+          "y": 216,
+          "style": {
+            "backgroundColor": "rgb(249, 128,2)"
+          }
+        }
+      },
+      "49671184-988c-5b4d-18a2-6df3d6903f15": {
+        "name": "hello",
+        "options": {
+          "x": 393,
+          "y": 72,
+          "style": {
+            "backgroundColor": "rgb(111, 128,9)"
+          }
+        }
+      }
+    },
+    "pipes": [
+      {
+        "source": {
+          "id": "49671184-988c-5b4d-18a2-6df3d6903f15",
+          "port": [
+            "out",
+            0
+          ]
+        },
+        "target": {
+          "id": "4fad21a9-0b43-6178-8092-12dd552cb9b0",
+          "port": [
+            "in",
+            0
+          ]
+        }
+      }
+    ]
+  }
+};
 
 function S4() {
   return (((1+Math.random())*0x10000)|0).toString(16).substring(1);

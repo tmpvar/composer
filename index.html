@@ -35,15 +35,159 @@
             }),
             scene;
 
+        var createNode = function(nodeId, nodeObj, fn) {
+          $.ajax({
+            url     : '/nodes/' + nodeObj.name,
+            dataType: 'json',
+            success : function(data) {
+              nodeObj.options.width  = 100;
+              nodeObj.options.height = 100;
+              var node  = carena.build(nodeObj.options || {}, [
+                    "carena.Node",
+                    "carena.Renderable",
+                    "composer.Functional",
+                    "carena.Draggable",
+                    "carena.RelativeToParent",
+                    "carena.Box"
+                  ], {
+                    myId: nodeId
+                  }),
+                  // Build the label
+                  label = carena.build({
+                    color: "white",
+                    style: {
+                      backgroundColor: "black"
+                    },
+                    width: node.width,
+                    height: 20,
+                    x: node.x,
+                    y: node.y,
+                    text: nodeObj.name
+                  }, [
+                    "cider.Textual",
+                    "carena.RelativeToParent"
+                  ]);
+
+              label.font.set(defaultFont);
+              label.style.paddingLeft = 5;
+              label.style.paddingTop = 0;
+              node.add(label);
+              
+              // build out ports
+              for (var i=0; i<data.ports['out'].length; i++) {
+                node.add(carena.build({
+                  x: node.x + (i*22),
+                  y: node.y + node.height,
+                  width: 20,
+                  height:10,
+                  style : {
+                    backgroundColor: "green"
+                  },
+                  port : data.ports['out'][i]
+                }, [
+                  "carena.RelativeToParent", "composer.Port"
+                ]));
+              }
+
+              for (var j=0; j<data.ports['in'].length; j++) {
+                node.add(carena.build({
+                  x: node.x + (j*22),
+                  y: node.y - 10,
+                  width: 20,
+                  height:10,
+                  style : {
+                    backgroundColor : "red"
+                  },
+                  port : data.ports['in'][i]
+                }, [
+                  "carena.RelativeToParent", "composer.Port"
+                ]));
+              }
+
+              fn(null, node);
+            }
+          });
+        };
+        
         var fromTransport = function(obj) {
-          //obj.scene = obj.scene || {};
-          var flow = carena.build({x:0, y:0, width: 100, height: 100, color: 'darkgrey'},
+
+          var flow = carena.build({
+            x     : 0,
+            y     : 0,
+            width : 100,
+            height: 100,
+            color : 'darkgrey'},
           [
             "carena.Node",
             "carena.Eventable",
             "carena.Draggable",
             "carena.RelativeToParent",
-          ], {});//obj.scene.settings || {});
+          ]);
+
+          // Recreate the nodes
+          if (obj.nodes) {
+            var nodeCount = 0, idMap = {};
+            for (var nodeId in obj.nodes) {
+              if (obj.nodes.hasOwnProperty(nodeId)) {
+                nodeCount++;
+                createNode(nodeId, obj.nodes[nodeId], function(err, node) {
+                  nodeCount--;
+                  if (err) {
+                    console.log(err);
+                    return;
+                  }
+                  // TODO: keep the id map in carena
+                  idMap[node.myId] = node;
+                  flow.add(node);
+
+                  if (nodeCount <= 0 && obj.pipes) {
+                    for (var pipeIdx in obj.pipes) {
+                      if (obj.pipes.hasOwnProperty(pipeIdx)) {
+                       var pipeObj = carena.build({},['composer.Pipe']);
+                       var pipe = obj.pipes[pipeIdx];
+                       var sourcePorts = idMap[pipe.source.id].ports;
+                       var targetPorts = idMap[pipe.target.id].ports;
+                       var port;
+
+                       for (var i=0; i<sourcePorts.length; i++) {
+                        port = sourcePorts[i];
+
+                        if (port.direction === pipe.source.port[0] &&
+                            port.portIndex === pipe.source.port[1])
+                        {
+                          pipeObj.source = port;
+                          break;
+                        }
+                       }
+
+                       for (var i=0; i<targetPorts.length; i++) {
+                        port = targetPorts[i];
+                        console.log(port.direction);
+                        if (port.direction === pipe.target.port[0] &&
+                            port.portIndex === pipe.target.port[1])
+                        {
+                          console.log("setup target");
+                          pipeObj.target = port;
+                          
+                          // parent the pipe so it will get rendered
+                          var source = pipeObj.source, target = pipeObj.target;
+                          var commonParent = carena.commonAncestor(source,
+                                                                   target);
+                          if (commonParent) {
+                            commonParent.unshift(pipeObj);
+                          }
+                          break;
+                        }
+                       }
+                      }
+                    }
+                  }
+                });
+              }
+            }
+          }
+
+/*
 
           function recurse(node, data) {
             if (data.children && data.children.length > 0) {
@@ -74,36 +218,99 @@
             }
           } else {
             return flow;
-          }
+          }*/
+          return flow;
         };
 
-        var toTransport = function(branch) {
+
+/*
+Target format:
+
+{
+  type: "flow",
+  name : "THEFLOW",
+  nodes: {
+    "c4c9366c" : {
+      type : "js",
+      name : "hello",
+      options : {
+        x     :10,
+        y     :100,
+        style : {
+           backgroundColor : "#FF00FF"
+        }
+      }
+    },
+    "dcf12f26" : {
+      type    : "js",
+      name    : "out",
+      options : {
+        x : 10,
+        y: 500,
+        style : {
+          backgroundColor: "#FF000"
+        }
+      }
+    }
+  },
+  pipes : [
+    {
+      source : {
+        id   : "c4c9366c",
+        port : ["out", "return"]
+      },
+      target : {
+        id   : "dcf12f26",
+        port : ["in", "data"]
+      }
+    }
+  ]
+}
+
+*/
+
+        var toTransport = window.toTransport = function(branch) {
           var res = {
             type : "flow",
             name : "THEFLOW",
-            scene : {}
-          };
+          },
+          nodes = {},
+          pipes = [],
+          recurse = function(node) {
+            if (node.hasFeature("composer.Functional") && node.parent === branch) {
+              nodes[node.myId] = {
+                type    : node.type,
+                name    : node.name || node.myId,
+                options : {
+                  x : node.x,
+                  y : node.y,
+                  style : {
+                    backgroundColor : node.style.backgroundColor
+                  }
+                }
+              };
+            } else if (node.hasFeature("composer.Pipe")) {
+              pipes.push({
+                source : {
+                  id   : node.source.parent.myId,
+                  port : [node.source.direction, node.source.name]
+                },
+                target : {
+                  id   : node.target.parent.myId,
+                  port : [node.target.direction, node.target.name]
+                }
+              });
+            }
 
-          function recurse(node) {
-            var transport = {
-              settings: node.dehydrate(),
-              features: node.features
-            };
-            var children = false;
             if (node.children && node.children.length) {
-              children = [];
               for (var i = 0; i<node.children.length; i++) {
-                children.push(recurse(node.children[i]));
+                recurse(node.children[i]);
               }
             }
-
-            if (children !== false) {
-              transport.children = children;
-            }
-            return transport;
-          }
-
-          res.scene = recurse(branch).children;
+          };
+          recurse(branch);
+          res.nodes = nodes;
+          res.pipes = pipes;
           return res;
         };
 
