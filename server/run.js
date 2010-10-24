@@ -63,14 +63,14 @@ var connect    = require("connect"),
           "id": "49671184-988c-5b4d-18a2-6df3d6903f15",
           "port": [
             "out",
-            0
+            "return"
           ]
         },
         "target": {
           "id": "4fad21a9-0b43-6178-8092-12dd552cb9b0",
           "port": [
             "in",
-            0
+            "data"
           ]
         }
       }

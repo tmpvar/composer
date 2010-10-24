@@ -42,6 +42,7 @@
             success : function(data) {
               nodeObj.options.width  = 100;
               nodeObj.options.height = 100;
+              nodeObj.options.name = data.name;
               var node  = carena.build(nodeObj.options || {}, [
                     "carena.Node",
                     "carena.Renderable",
@@ -153,7 +154,7 @@
                         port = sourcePorts[i];
 
                         if (port.direction === pipe.source.port[0] &&
-                            port.portIndex === pipe.source.port[1])
+                            port.name === pipe.source.port[1])
                         {
                           pipeObj.source = port;
                           break;
@@ -164,7 +165,7 @@
                         port = targetPorts[i];
                         console.log(port.direction);
                         if (port.direction === pipe.target.port[0] &&
-                            port.portIndex === pipe.target.port[1])
+                            port.name === pipe.target.port[1])
                         {
                           console.log("setup target");
                           pipeObj.target = port;
@@ -186,39 +187,6 @@
               }
             }
           }
-
-/*
-
-          function recurse(node, data) {
-            if (data.children && data.children.length > 0) {
-              for (var nodeIdx = 0; nodeIdx<data.children.length; nodeIdx++) {
-                // build an array of node features
-                var current = data.children[nodeIdx];
-                current.settings = current.settings || {
-                  color : "white",
-                  x:50,
-                  y:50,
-                  width: 100,
-                  height:100
-                };
-                var built = carena.build(current.settings, current.features, current.settings);
-                if (built.font) {
-                  built.font.set(defaultFont);
-                }
-                node.add(recurse(built, current));
-              }
-            }
-            return node;
-          }
-          if (obj.scene) {
-            if (!obj.scene.children && obj.scene.length) {
-              return recurse(flow, { children: obj.scene });
-            } else {
-              return recurse(flow, obj.scene);
-            }
-          } else {
-            return flow;
-          }*/
           return flow;
         };
 
