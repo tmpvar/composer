@@ -73,7 +73,7 @@
               label.style.paddingLeft = 5;
               label.style.paddingTop = 0;
               node.add(label);
-              
+
               // build out ports
               for (var i=0; i<data.ports['out'].length; i++) {
                 node.add(carena.build({
@@ -91,6 +91,7 @@
               }
 
               for (var j=0; j<data.ports['in'].length; j++) {
+
                 node.add(carena.build({
                   x: node.x + (j*22),
                   y: node.y - 10,
@@ -99,7 +100,7 @@
                   style : {
                     backgroundColor : "red"
                   },
-                  port : data.ports['in'][i]
+                  port : data.ports['in'][j]
                 }, [
                   "carena.RelativeToParent", "composer.Port"
                 ]));
@@ -109,7 +110,7 @@
             }
           });
         };
-        
+
         var fromTransport = function(obj) {
 
           var flow = carena.build({
@@ -466,7 +467,6 @@ Target format:
                       label.style.paddingTop = 2;
 
                       for (var i=0; i<item.ports['out'].length; i++) {
-
                         rnd.add(carena.build({
                           x: rnd.x + (i*22),
                           y: rnd.y + rnd.height,
@@ -490,7 +490,7 @@ Target format:
                           style : {
                             backgroundColor : "red"
                           },
-                          port : item.ports['in'][i]
+                          port : item.ports['in'][j]
                         }, [
                           "carena.RelativeToParent", "composer.Port"
                         ]));
