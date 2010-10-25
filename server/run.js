@@ -120,7 +120,7 @@ var connect    = require("connect"),
   },
   "http server": {
     "name": "http server",
-    "code": "function(port, request, response) {\n  require(\"http\").createServer(function(res, res) {\n    request(req);\n    response(res); \n  }); \n}",
+    "code": "function(port, request, response) {\n  require(\"http\").createServer(function(req, res) {\n    request(req);\n    response(res); \n  }).listen(port); \n}",
     "type": "js",
     "ports": {
       "in": [

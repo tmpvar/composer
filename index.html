@@ -17,6 +17,7 @@
     <script type="text/javascript">
       jQuery(function() {
         var feature  = carena.feature,
+            currentFlow = "THEFLOW",
             defaultFont = "16px ProggyClean",
             renderer = carena.build({}, ["carena.Renderer"], {
               canvas: document.getElementById("composer"),
@@ -188,57 +189,10 @@
           return flow;
         };
 
-
-/*
-Target format:
-
-{
-  type: "flow",
-  name : "THEFLOW",
-  nodes: {
-    "c4c9366c" : {
-      type : "js",
-      name : "hello",
-      options : {
-        x     :10,
-        y     :100,
-        style : {
-           backgroundColor : "#FF00FF"
-        }
-      }
-    },
-    "dcf12f26" : {
-      type    : "js",
-      name    : "out",
-      options : {
-        x : 10,
-        y: 500,
-        style : {
-          backgroundColor: "#FF000"
-        }
-      }
-    }
-  },
-  pipes : [
-    {
-      source : {
-        id   : "c4c9366c",
-        port : ["out", "return"]
-      },
-      target : {
-        id   : "dcf12f26",
-        port : ["in", "data"]
-      }
-    }
-  ]
-}
-
-*/
-
         var toTransport = window.toTransport = function(branch) {
           var res = {
             type : "flow",
-            name : "THEFLOW",
+            name : currentFlow,
           },
           nodes = {},
           pipes = [],
@@ -297,7 +251,7 @@ Target format:
         }
         var selected = null;
         jQuery.ajax({
-          url : "/nodes/THEFLOW",
+          url : "/nodes/" + currentFlow,
           dataType: "json",
           success : function(data) {
             scene = fromTransport(data);
@@ -307,11 +261,11 @@ Target format:
             scene.containsPoint = function() { return true; }
           },
           error : function() {
-            // Create THEFLOW
+            // Create the current flow
             jQuery.ajax({
               type : "post",
               url  : "/nodes/",
-              data : { name: "THEFLOW", type: "flow" },
+              data : { name: currentFlow, type: "flow" },
               success  : function() {
                 window.location.reload();
               }
@@ -326,6 +280,7 @@ Target format:
 
             // TODO: woah, this is a global handler. is this a good thing?
             scene.event.bind("mouse.click.2", function(name,data) {
+              console.log("here");
               // double click
               for (var i=0; i<data.target.features.length; i++) {
                 if (data.target.features[i] === "composer.Functional") {
@@ -679,7 +634,7 @@ Target format:
         window.addEventListener("keydown", function(ev) {
           if (ev.keyCode === 13 && editorWindow === false) {
             terminal.fromString("> executing....");
-            jQuery.get("/nodes/THEFLOW/run", function(data) {
+            jQuery.get("/nodes/" + currentFlow + "/run", function(data) {
               terminal.fromString(terminal + "\n> Results:\n\n" + data);
             });
           }

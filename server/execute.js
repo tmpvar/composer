@@ -53,10 +53,17 @@ function createNode(nodeId, node) {
 
       // TODO: too much assumption here..
       var toRun = "(function(){ return " + node.source + "})()";
-      var context = { fn : null};
+      var ctx = { 
+        fn : null,
+        require : function(str) {
+          if (!str !== "fs") {
+            return require(str);
+          }
+        },
+        console : console
+      };
 
-      idMap[nodeId] = flow.node(Script.runInThisContext(toRun, context),
-                                nodeId);
+      idMap[nodeId] = flow.node(Script.runInNewContext(toRun, ctx), nodeId);
 
       if (total === 0) {
         setupRouting(rawObject.pipes);
