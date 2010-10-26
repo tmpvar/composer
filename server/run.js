@@ -1,6 +1,7 @@
 var connect    = require("connect"),
     spawn      = require("child_process").spawn,
     jsToPorts  = require("./port").jsToPorts,
+    urlParser  = require("url").parse;
     nodes      = {
   "hello": {
     "name": "hello",
@@ -280,6 +281,37 @@ connect.createServer.apply(connect, [
         child.on("exit", done);
       }
     });
+    
+    app.get("/chisel", function(req, res, next) {
+      var urlParts = urlParser(req.url, true), q,
+          nodeKeys = Object.keys(nodes),
+          out = [];
+
+      if (!urlParts.query || !urlParts.query.q) {
+        res.writeHead(400, {"Content-type" : "application/json"});
+        res.end('{"Error": "Please provide a ?q= on the url"})');
+      } else {
+        q = Array.prototype.slice.apply(urlParts.query.q.toLowerCase());
+        res.writeHead("200", {"Content-type" : "application/json"});
+        for (var i=0; i<nodeKeys.length; i++) {
+          var found = true;
+          for (var j=0; j<q.length; j++) {
+            if (nodeKeys[i].toLowerCase().indexOf(q[j]) === -1) {
+              found = false;
+              break;
+            }
+          }
+          if (found) {
+            out.push({
+              name : nodeKeys[i],
+              node : nodes[nodeKeys[i]]
+            });
+          }
+        }
+        res.end(JSON.stringify(out));
+      }
+    });
+
   }),
 
   connect.staticProvider(__dirname + '/../'),

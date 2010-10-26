@@ -12,13 +12,12 @@
     <script type="text/javascript" src="../carena/lib/carena.js"></script>
     <script type="text/javascript" src="lib/composer.js"></script>
     <script type="text/javascript" src="../cider/lib/cider.js"></script>
+    <script type="text/javascript" src="lib/chisel.js"></script>
 
     <script src="lib/jquery.js"></script>
     <script type="text/javascript">
       jQuery(function() {
         var feature  = carena.feature,
-            currentFlow = "THEFLOW",
-            defaultFont = "16px ProggyClean",
             renderer = carena.build({}, ["carena.Renderer"], {
               canvas: document.getElementById("composer"),
               style: {
@@ -30,87 +29,14 @@
                 "carena.Eventable",
                 "carena.Camera",
                 "carena.DragManager",
-                "carena.DropManager"
+                "carena.DropManager",
+                "composer.ModalManager"
               ], {
               renderer: renderer
             }),
             scene;
 
-        var createNode = function(nodeId, nodeObj, fn) {
-          $.ajax({
-            url     : '/nodes/' + nodeObj.name,
-            dataType: 'json',
-            success : function(data) {
-              nodeObj.options.width  = 100;
-              nodeObj.options.height = 100;
-              nodeObj.options.name = data.name;
-              var node  = carena.build(nodeObj.options || {}, [
-                    "carena.Node",
-                    "carena.Renderable",
-                    "composer.Functional",
-                    "carena.Draggable",
-                    "carena.RelativeToParent",
-                    "carena.Box"
-                  ], {
-                    myId: nodeId
-                  }),
-                  // Build the label
-                  label = carena.build({
-                    color: "white",
-                    style: {
-                      backgroundColor: "black"
-                    },
-                    width: node.width,
-                    height: 20,
-                    x: node.x,
-                    y: node.y,
-                    text: nodeObj.name
-                  }, [
-                    "cider.Textual",
-                    "carena.RelativeToParent"
-                  ]);
-
-              label.font.set(defaultFont);
-              label.style.paddingLeft = 5;
-              label.style.paddingTop = 0;
-              node.add(label);
-
-              // build out ports
-              for (var i=0; i<data.ports['out'].length; i++) {
-                node.add(carena.build({
-                  x: node.x + (i*22),
-                  y: node.y + node.height,
-                  width: 20,
-                  height:10,
-                  style : {
-                    backgroundColor: "green"
-                  },
-                  port : data.ports['out'][i]
-                }, [
-                  "carena.RelativeToParent", "composer.Port"
-                ]));
-              }
-
-              for (var j=0; j<data.ports['in'].length; j++) {
-
-                node.add(carena.build({
-                  x: node.x + (j*22),
-                  y: node.y - 10,
-                  width: 20,
-                  height:10,
-                  style : {
-                    backgroundColor : "red"
-                  },
-                  port : data.ports['in'][j]
-                }, [
-                  "carena.RelativeToParent", "composer.Port"
-                ]));
-              }
-
-              fn(null, node);
-            }
-          });
-        };
+        composer.chisel.modalManager = camera;
 
         var fromTransport = function(obj) {
 
@@ -133,7 +59,7 @@
             for (var nodeId in obj.nodes) {
               if (obj.nodes.hasOwnProperty(nodeId)) {
                 nodeCount++;
-                createNode(nodeId, obj.nodes[nodeId], function(err, node) {
+                composer.createNode(nodeId, obj.nodes[nodeId], function(err, node) {
                   nodeCount--;
                   if (err) {
                     console.log(err);
@@ -192,7 +118,7 @@
         var toTransport = window.toTransport = function(branch) {
           var res = {
             type : "flow",
-            name : currentFlow,
+            name : composer.currentFlow,
           },
           nodes = {},
           pipes = [],
@@ -251,7 +177,7 @@
         }
         var selected = null;
         jQuery.ajax({
-          url : "/nodes/" + currentFlow,
+          url : "/nodes/" + composer.currentFlow,
           dataType: "json",
           success : function(data) {
             scene = fromTransport(data);
@@ -265,7 +191,7 @@
             jQuery.ajax({
               type : "post",
               url  : "/nodes/",
-              data : { name: currentFlow, type: "flow" },
+              data : { name: composer.currentFlow, type: "flow" },
               success  : function() {
                 window.location.reload();
               }
@@ -327,10 +253,9 @@
               selected = parent.child(0);
             }
           } else if (ev.keyCode === 27) { // escape
-            if (chooser !== null && chooser.x) {
-              chooser.parent.remove(chooser);
-              chooser = null;
-            } else if (editorWindow) {
+            composer.chisel.hide();
+
+            if (editorWindow) {
               editorWindow.parent.remove(editorWindow);
               for (var i=0; i<editorWindow.children.length; i++) {
                 editorWindow.children[i].parent = null;
@@ -338,138 +263,7 @@
               editorWindow = false;
             }
           } else if (ev.keyCode === 32) {
-            // Spawn a dialog for choosing a node from the db
-            if (!chooser && !editorWindow) {
-              chooser = true;
-              jQuery.ajax({
-                url: "/nodes",
-                dataType: "json",
-                success: function(data) {
-
-                  var keys = Object.keys(data), l = keys.length, h = 30, w = 300;
-                  chooser = carena.build({
-                    x: 10,
-                    y: 10,
-                    height: (h*l)+l+1,
-                    width: w,
-                    color: "darkgrey"
-                  },[
-                    "carena.Node"
-                  ]);
-
-                  camera.add(chooser);
-
-                  var buildSelectionNode = function(item) {
-                    var tmp = carena.build({
-                      y: chooser.y + 1+(i*h)+(i*1),
-                      x: chooser.x + 10,
-                      width: chooser.width-20,
-                      height: h,
-                      background: "black",
-                      color: "white",
-                      code: item.code || "",
-                      name: item.name || ""
-                    }, [
-                      "carena.Node",
-                      "carena.Eventable",
-                      "composer.Functional",
-                      "cider.Textual"
-                    ]);
-                    tmp.font.set(defaultFont);
-                    tmp.event.bind("mouse.in", function() {
-                      tmp.background = "#222";
-                    });
-
-                    tmp.event.bind("mouse.out", function() {
-                      tmp.background = "black";
-                    });
-
-                    tmp.event.bind("mouse.click.2", function() {
-                      chooser.parent.remove(chooser);
-                      chooser = null;
-                      spawnEditor(false, item.name, item.code);
-                    });
-                    tmp.event.bind("mouse.click", function(name) {
-                      // Build a real node.
-                      var rnd = carena.build({x:20, y: 20, width: 100, height:100,
-                        code : window.location + "nodes/" + item.name,
-                        name : item.name || "",
-                        style : {
-                          backgroundColor: "rgb(" + (new Date()).getTime()%255 +
-                               ", 128," + Math.round(Math.random()*200%255) + ")",
-                        }
-                      }, [
-                        "carena.Box",
-                        "carena.Draggable",
-                        "carena.RelativeToParent",
-                        "composer.Functional"
-                      ],{});
-
-                      var label = carena.build({
-                        x: rnd.x,
-                        y:rnd.y,
-                        width:rnd.width,
-                        height: 20,
-                        color: "white",
-                        text: item.name
-                      },[
-                        "carena.Node",
-                        "cider.Textual",
-                        "carena.RelativeToParent"
-                      ]);
-                      label.font.set(defaultFont);
-                      label.style.paddingLeft = 2;
-                      label.style.paddingTop = 2;
-
-                      for (var i=0; i<item.ports['out'].length; i++) {
-                        rnd.add(carena.build({
-                          x: rnd.x + (i*22),
-                          y: rnd.y + rnd.height,
-                          width: 20,
-                          height:10,
-                          style : {
-                            backgroundColor: "green"
-                          },
-                          port : item.ports['out'][i]
-                        }, [
-                          "carena.RelativeToParent", "composer.Port"
-                        ]));
-                      }
-
-                      for (var j=0; j<item.ports['in'].length; j++) {
-                        rnd.add(carena.build({
-                          x: rnd.x + (j*22),
-                          y: rnd.y - 10,
-                          width: 20,
-                          height:10,
-                          style : {
-                            backgroundColor : "red"
-                          },
-                          port : item.ports['in'][j]
-                        }, [
-                          "carena.RelativeToParent", "composer.Port"
-                        ]));
-                      }
-
-                      camera.target.add(rnd.add(label));
-                      if (chooser.parent) {
-                        chooser.parent.remove(chooser);
-                      }
-                      chooser = null;
-                    });
-
-                    tmp.style.paddingLeft = 10;
-                    tmp.style.paddingTop  = 6;
-                    tmp.fromString(item.name);
-                    return tmp;
-                  }
-
-                  for (var i=0; i<l; i++) {
-                    chooser.add(buildSelectionNode(data[keys[i]]));
-                  }
-                }
-              });
-            }
+            composer.chisel.show();
           } else if (ev.keyCode === 78 && ev.ctrlKey === true) {
             ev.preventDefault();
             ev.stopPropagation();
@@ -542,8 +336,8 @@
           name.style.paddingLeft = 10;
           name.fromString(nodeName);
           name.setFocus();
-          name.font.set(defaultFont);
-          editor.font.set(defaultFont);
+          name.font.set(composer.defaultFont);
+          editor.font.set(composer.defaultFont);
           // Setup the button
           // TODO: this probably could be made easier heh.
           saveButton.event.bind("mouse.in", function() {
@@ -620,7 +414,7 @@
           "carena.Node",
           "cider.Textual",
         ]);
-        terminal.font.set(defaultFont);
+        terminal.font.set(composer.defaultFont);
         var _terminalRender = terminal.render;
         terminal.render = function(renderer) {
           terminal.y = renderer.canvas.height-200;
@@ -634,7 +428,7 @@
         window.addEventListener("keydown", function(ev) {
           if (ev.keyCode === 13 && editorWindow === false) {
             terminal.fromString("> executing....");
-            jQuery.get("/nodes/" + currentFlow + "/run", function(data) {
+            jQuery.get("/nodes/" + composer.currentFlow + "/run", function(data) {
               terminal.fromString(terminal + "\n> Results:\n\n" + data);
             });
           }
