@@ -1,7 +1,7 @@
 {
   "name": "composer",
   "description": "Visually describe functionality, and then execute it",
-  "version": "0.1.1",
+  "version": "0.1.2",
   "keywords": [ "visual programming", "control/data flow" ],
   "maintainers": [
     { "name": "Elijah Insua", "web": "http://tmpvar.com" }
@@ -15,9 +15,9 @@
     "url": "http://github.com//composer.git"
   },
   "dependencies": {
-    "conductor": "0.2.0",
-    "cider"    : ">=0.0.0",
-    "carena"   : ">=0.0.1",
+    "conductor": ">=0.2.0",
+    "cider"    : ">=0.1.1",
+    "carena"   : ">=0.1.1",
     "socket.io": ">=0.5.0"
   }
 }

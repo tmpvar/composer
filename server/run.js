@@ -2,6 +2,8 @@ var connect    = require("connect"),
     spawn      = require("child_process").spawn,
     jsToPorts  = require("./port").jsToPorts,
     urlParser  = require("url").parse;
+    cider      = require("cider").server.node.connect;
+    carena     = require("carena").server.node.connect;
     nodes      = {
   "hello": {
     "name": "hello",
@@ -281,7 +283,7 @@ connect.createServer.apply(connect, [
         child.on("exit", done);
       }
     });
-    
+
     app.get("/chisel", function(req, res, next) {
       var urlParts = urlParser(req.url, true), q,
           nodeKeys = Object.keys(nodes),
@@ -315,5 +317,6 @@ connect.createServer.apply(connect, [
   }),
 
   connect.staticProvider(__dirname + '/../'),
-  connect.staticProvider(__dirname + '/../../')
+  carena(),
+  cider()
 ]).listen(3000);
