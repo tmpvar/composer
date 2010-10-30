@@ -6,160 +6,43 @@
       body { margin:0px; padding:0px; background: #000;}
       @font-face {
         font-family: "ProggyClean";
-        src: url('fonts/ProggyClean.ttf');
+        src: url('/fonts/ProggyClean.ttf');
       }
     </style>
+    <script type="text/javascript" src="/lib/jquery.js"></script>
+    <script type="text/javascript" src="/lib/route.js"></script>
+    
     <script type="text/javascript" src="/carena.js"></script>
     <script type="text/javascript" src="/cider.js"></script>
-    <script type="text/javascript" src="/lib/composer.js"></script>
-    <script type="text/javascript" src="/lib/route.js"></script>
-    <script type="text/javascript" src="/lib/chisel.js"></script>
 
-    <script src="lib/jquery.js"></script>
+    <script type="text/javascript" src="/composer/core.js"></script>
+    <script type="text/javascript" src="/composer/terminal.js"></script>
+    <script type="text/javascript" src="/composer/editor.js"></script>
+    <script type="text/javascript" src="/composer/chisel.js"></script>
+    <script type="text/javascript" src="/composer/transport.js"></script>
+
     <script type="text/javascript">
       jQuery(function() {
-        var feature  = carena.feature,
-            renderer = carena.build({}, ["carena.Renderer"], {
-              canvas: document.getElementById("composer"),
-              style: {
-                backgroundColor : "rgb(0,0,0)"
-              }
-            }),
-            camera = carena.build({},
-              [
-                "carena.Eventable",
-                "carena.Camera",
-                "carena.DragManager",
-                "carena.DropManager",
-                "composer.ModalManager"
-              ], {
-              renderer: renderer
-            }),
-            scene;
-
-        composer.chisel.modalManager = camera;
-
-        var fromTransport = function(obj) {
-
-          var flow = carena.build({
-            x     : 0,
-            y     : 0,
-            width : 100,
-            height: 100,
-            color : 'darkgrey'},
-          [
-            "carena.Node",
+          composer.renderer = carena.build({}, ["carena.Renderer"], {
+            canvas: document.getElementById("composer"),
+            style: {
+              backgroundColor : "rgb(0,0,0)"
+            }
+          }),
+          composer.camera = carena.build({}, [
             "carena.Eventable",
-            "carena.Draggable",
-            "carena.RelativeToParent",
-          ]);
+            "carena.Camera",
+            "carena.DragManager",
+            "carena.DropManager",
+            "composer.ModalManager"
+          ], {
+            renderer: composer.renderer
+          });
 
-          // Recreate the nodes
-          if (obj.nodes) {
-            var nodeCount = 0, idMap = {};
-            for (var nodeId in obj.nodes) {
-              if (obj.nodes.hasOwnProperty(nodeId)) {
-                nodeCount++;
-                composer.createNode(nodeId, obj.nodes[nodeId], function(err, node) {
-                  nodeCount--;
-                  if (err) {
-                    console.log(err);
-                    return;
-                  }
-                  // TODO: keep the id map in carena
-                  idMap[node.myId] = node;
-                  flow.add(node);
+        var scene, terminal = composer.createTerminal();
+        composer.camera.add(terminal);
 
-                  if (nodeCount <= 0 && obj.pipes) {
-                    for (var pipeIdx in obj.pipes) {
-                      if (obj.pipes.hasOwnProperty(pipeIdx)) {
-                       var pipeObj = carena.build({},['composer.Pipe']);
-                       var pipe = obj.pipes[pipeIdx];
-                       var sourcePorts = idMap[pipe.source.id].ports;
-                       var targetPorts = idMap[pipe.target.id].ports;
-                       var port;
-
-                       for (var i=0; i<sourcePorts.length; i++) {
-                        port = sourcePorts[i];
-
-                        if (port.direction === pipe.source.port[0] &&
-                            port.name === pipe.source.port[1])
-                        {
-                          pipeObj.source = port;
-                          break;
-                        }
-                       }
-
-                       for (var i=0; i<targetPorts.length; i++) {
-                        port = targetPorts[i];
-                        if (port.direction === pipe.target.port[0] &&
-                            port.name === pipe.target.port[1])
-                        {
-                          pipeObj.target = port;
-                          // parent the pipe so it will get rendered
-                          var source = pipeObj.source, target = pipeObj.target;
-                          var commonParent = carena.commonAncestor(source,
-                                                                   target);
-                          if (commonParent) {
-                            commonParent.unshift(pipeObj);
-                          }
-                          break;
-                        }
-                       }
-                      }
-                    }
-                  }
-                });
-              }
-            }
-          }
-          return flow;
-        };
-
-        var toTransport = window.toTransport = function(branch) {
-          var res = {
-            type : "flow",
-            name : composer.currentFlow,
-          },
-          nodes = {},
-          pipes = [],
-          recurse = function(node) {
-            if (node.hasFeature("composer.Functional") && node.parent === branch) {
-              nodes[node.myId] = {
-                type    : node.type,
-                name    : node.name || node.myId,
-                options : {
-                  x : node.x,
-                  y : node.y,
-                  style : {
-                    backgroundColor : node.style.backgroundColor
-                  }
-                }
-              };
-            } else if (node.hasFeature("composer.Pipe")) {
-              pipes.push({
-                source : {
-                  id   : node.source.parent.myId,
-                  port : [node.source.direction, node.source.name]
-                },
-                target : {
-                  id   : node.target.parent.myId,
-                  port : [node.target.direction, node.target.name]
-                }
-              });
-            }
-
-            if (node.children && node.children.length) {
-              for (var i = 0; i<node.children.length; i++) {
-                recurse(node.children[i]);
-              }
-            }
-          };
-          recurse(branch);
-          res.nodes = nodes;
-          res.pipes = pipes;
-          return res;
-        };
+        composer.chisel.modalManager = composer.camera;
 
         var saving = false;
         function save() {
@@ -168,7 +51,7 @@
             jQuery.ajax({
               type : "post",
               url  : "/nodes/",
-              data : JSON.stringify(toTransport(scene)),
+              data : JSON.stringify(composer.transport.encode(scene)),
               contentType : "application/json",
               complete : function(data) {
                 saving = false;
@@ -181,7 +64,7 @@
           url : "/nodes/" + composer.currentFlow,
           dataType: "json",
           success : function(data) {
-            scene = fromTransport(data);
+            scene = composer.transport.decode(data);
             window.scene = scene;
             scene.width=0;
             scene.height=0;
@@ -207,7 +90,6 @@
 
             // TODO: woah, this is a global handler. is this a good thing?
             scene.event.bind("mouse.click.2", function(name,data) {
-              console.log("here");
               // double click
               for (var i=0; i<data.target.features.length; i++) {
                 if (data.target.features[i] === "composer.Functional") {
@@ -222,18 +104,18 @@
                 }
               }
             });
-            camera.target = scene;
+            composer.camera.target = scene;
 
             scene.dirty = true;
             setTimeout(function render() {
-              var ctx = renderer.context;
+              var ctx = composer.renderer.context;
               if (ctx.canvas.width !== $(window).width() ||
                   ctx.canvas.height != $(window).height()-5)
               {
                 ctx.canvas.width =  $(window).width();
                 ctx.canvas.height = $(window).height()-5;
               }
-              camera.render();
+              composer.camera.render();
               setTimeout(render, 1000/40);
             }, 0);
           }
@@ -405,31 +287,19 @@
           saveButton.event.bind("mouse.up", mouseUp);
           editor.fromString(nodeCode);
 
-          camera.add(editorWindow.add(editor.add(lineNumbers)).add(name).add(saveButton));
+          camera.add(editorWindow.add(editor.add(lineNumbers))
+                .add(name)
+                .add(saveButton));
         }
 
-        var terminal = carena.build({
-          x:0,y:renderer.canvas.height-200, width: renderer.canvas.width, height: 200,
-          text: document.getElementById("terminal-text").innerText
-        }, [
-          "carena.Node",
-          "cider.Textual",
-        ]);
-        terminal.font.set(composer.defaultFont);
-        var _terminalRender = terminal.render;
-        terminal.render = function(renderer) {
-          terminal.y = renderer.canvas.height-200;
-          terminal.width = renderer.canvas.width;
-          _terminalRender(renderer);
-        }
 
-        camera.add(terminal);
 
         // Console stuff
         window.addEventListener("keydown", function(ev) {
           if (ev.keyCode === 13 && editorWindow === false) {
             terminal.fromString("> executing....");
-            jQuery.get("/nodes/" + composer.currentFlow + "/run", function(data) {
+            jQuery.get("/nodes/" + composer.currentFlow + "/run", function(data)
+            {
               terminal.fromString(terminal + "\n> Results:\n\n" + data);
             });
           }

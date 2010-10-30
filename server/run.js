@@ -316,7 +316,7 @@ connect.createServer.apply(connect, [
 
   }),
 
-  connect.staticProvider(__dirname + '/../'),
+  connect.staticProvider({ root: __dirname + '/../public/'} ),
   carena(),
   cider()
 ]).listen(3000);

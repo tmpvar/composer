@@ -2,6 +2,9 @@
   var composer = out.composer = {
     currentFlow : "THEFLOW",
     defaultFont : "16px ProggyClean",
+    defaultText : function(type) { 
+      return $("#" + type + "-text").text();
+    },
     createNode : function(nodeId, nodeObj, fn) {
       $.ajax({
         url     : '/nodes/' + nodeObj.name,
