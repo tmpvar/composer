@@ -256,7 +256,7 @@ connect.createServer.apply(connect, [
         res.end(JSON.stringify({code: 404, body: "Not Found"}));
       } else {
         res.writeHead(200, {"Content-type":"text/plain"});
-        var child = spawn("/usr/local/bin/node",
+        var child = spawn(process.env['_'],
                           [__dirname + "/execute.js"]);
 
         child.stdin.write(JSON.stringify(nodes[name]));
