@@ -3,26 +3,50 @@ var chooser = carena.build({
   x: 10,
   y: 10,
   height: 100,
-  width: 400,
+  width: 420,
   style : {
-    backgroundColor: "white"
+    backgroundColor: "#424242"
   }
 },[
-  "carena.Node", 
+  "carena.Node",
   "carena.Renderable",
   "carena.Draggable"
 ]),
+frag   = carena.build({
+  x: chooser.x+3+(chooser.width/2),
+  y: chooser.y+3,
+  width : (chooser.width/2)-6,
+  height: chooser.height-34,
+  style : {
+    backgroundColor : "black"
+  }
+},[
+  'carena.Node',
+  'carena.RelativeToParent'
+]),
+action = carena.build({
+  x: chooser.x+3,
+  y: chooser.y+3,
+  width : (chooser.width/2)-3,
+  height: chooser.height-34,
+  style : {
+    backgroundColor : "black"
+  }
+},[
+  'carena.Node',
+  'carena.RelativeToParent'
+]),
 input = carena.build({
   x : chooser.x+3,
-  y : chooser.y+3,
+  y : chooser.y+chooser.height-28,
   width : chooser.width-6,
-  height : chooser.height-6,
+  height : 25,
   style : {
     backgroundColor: "#00000",
     color: "white",
     paddingLeft : 3,
     paddingRight : 3,
-    paddingTop : 3,
+    paddingTop : 4,
     paddingBottom : 3
   }
 },[
@@ -35,11 +59,22 @@ available = carena.build({},[
   "carena.Node"
 ]);
 
+window.chooser = chooser;
+
 input.font.set(composer.defaultFont);
 input.setFocus(false);
-chooser.add(input).add(available);
+chooser.add(input).add(available).add(action).add(frag);
 
 composer.chisel = {
+  filters      : [],
+  actions      : {},
+  selection    : 0,
+  addAction    : function(type, cb) {
+    if (!composer.chisel.actions[type]) {
+      composer.chisel.actions[type] = [];
+    }
+    composer.chisel.actions[type].push(cb);
+  },
   modalManager : null,
   hide         : function() {
     composer.chisel.modalManager.hide(chooser);
@@ -49,53 +84,115 @@ composer.chisel = {
   show         : function() {
     input.setFocus(true);
     composer.chisel.modalManager.show(chooser);
+  },
+  perform      : function(action, obj, cb) {
+
+  },
+
+  addFilterResult : function(err, data) {
+    if (err) {
+      console.log("ERROR:", err);
+    };
+
+    if (data.str === input.toString()) {
+      node = carena.build({
+        x : chooser.x,
+        y : chooser.y + chooser.height + available.children.length*20,
+        width: chooser.width,
+        height: 20,
+        text : data.name,
+        representation: data,
+        background : '#103069',
+        style : {
+          backgroundColor : "black",
+          color: "white"
+        }
+      }, [
+        "carena.Box",
+        "cider.Textual",
+        "carena.RelativeToParent"
+      ]);
+      if (available.children.length === 0) {
+        node.background = "#5E99FF";
+        window.node = node;
+      }
+      available.add(node);
+    }
   }
 };
 
+available.event.bind("mouse.in", function(name, data) {
+  available.child(composer.chisel.selection).background = '#103069';
+  composer.chisel.selection = data.target.parent.childIndex(data.target);
+  available.child(composer.chisel.selection).background = '#5E99FF';
+});
+
+// NOTE: this only works because input hasn't bound to this event yet.
+input.event.bind("keyboard.down", function(name, data) {
+  var ret = false, children = !!available.children.length;
+
+  switch (data.key) {
+    case 9:
+      if (children) {
+        available.child(composer.chisel.selection).background = '#BF6600';
+      }
+    break;
+
+    case 38: // up
+      if (children) {
+        available.child(composer.chisel.selection).background = '#103069';
+        if (composer.chisel.selection -1 < 0) {
+          composer.chisel.selection = available.children.length-1;
+        } else {
+          composer.chisel.selection -= 1;
+        }
+        available.child(composer.chisel.selection).background = '#5E99FF';
+      }
+    break;
+
+    case 40: // down
+      if (children) {
+        available.child(composer.chisel.selection).background = '#103069';
+        if (composer.chisel.selection >= available.children.length-1) {
+          composer.chisel.selection = 0;
+        } else {
+          composer.chisel.selection += 1;
+        }
+        available.child(composer.chisel.selection).background = '#5E99FF';
+      }
+    break;
+
+    case 13:
+      console.log("return");
+    break;
+
+    default:
+      console.log(data.key);
+      ret = true;
+    break;
+   }
+
+   return ret;
+});
+
 var timeout = null;
 input.event.bind("text.*", function(name, data) {
-
   if (timeout) {
     clearTimeout(timeout);
   }
 
   timeout = setTimeout(function() {
     var str = data.node.toString(), node;
+
+    // clean the display
+    while(available.children.length > 0) {
+      available.remove(available.child(0));
+    }
+    composer.chisel.selection = 0;
+
     if (str.length > 0) {
-      $.ajax({
-        url      : "/chisel?q=" + str + "",
-        dataType : "json",
-        success  : function(data) {
-          while(available.children.length > 0) {
-            available.remove(available.child(0));
-          }
-          for (var i=0; i<data.length; i++) {
-            node = carena.build({
-              x : chooser.x,
-              y : chooser.y + chooser.height + i*20,
-              width: chooser.width,
-              height: 20,
-              text : data[i]["name"],
-              style : {
-                backgroundColor : "black",
-                color: "white"
-              }
-            }, [
-              "cider.Textual",
-              "carena.RelativeToParent"
-            ]);
-            available.add(node);
-          }
-        },
-        error: function() {
-          while(available.children.length > 0) {
-            available.remove(available.child(0));
-          }
-        }
-      });
-    } else {
-      while(available.children.length > 0) {
-        available.remove(available.child(0));
+      for (var i=0; i<composer.chisel.filters.length; i++) {
+        composer.chisel.filters[i](str, composer.chisel.addFilterResult);
       }
     }
   }, 100);
@@ -218,3 +315,4 @@ input.event.bind("text.*", function(name, data) {
         }
       });
     }*/
+
