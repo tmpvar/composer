@@ -12,7 +12,7 @@ var chooser = carena.build({
   "carena.Renderable",
   "carena.Draggable"
 ]),
-frag   = carena.build({
+action   = carena.build({
   x: chooser.x+3+(chooser.width/2),
   y: chooser.y+3,
   width : (chooser.width/2)-6,
@@ -24,7 +24,7 @@ frag   = carena.build({
   'carena.Node',
   'carena.RelativeToParent'
 ]),
-action = carena.build({
+frag = carena.build({
   x: chooser.x+3,
   y: chooser.y+3,
   width : (chooser.width/2)-3,
@@ -56,11 +56,16 @@ input = carena.build({
   "cider.FocusTarget"
 ]),
 available = carena.build({},[
-  "carena.Node"
+  "carena.Node",
+  "carena.RelativeToParent"
 ]);
 
-window.chooser = chooser;
-
+chooser._render = chooser.render;
+chooser.render = function(renderer) {
+  chooser.x = renderer.canvas.width/2-chooser.width/2;
+  chooser.y = renderer.canvas.height/2-chooser.height;
+  return chooser._render(renderer);
+}
 input.font.set(composer.defaultFont);
 input.setFocus(false);
 chooser.add(input).add(available).add(action).add(frag);
@@ -78,6 +83,8 @@ composer.chisel = {
   modalManager : null,
   hide         : function() {
     composer.chisel.modalManager.hide(chooser);
+    frag.removeAll();
+    action.removeAll();
     input.setFocus(false);
     input.fromString("");
   },
@@ -87,6 +94,10 @@ composer.chisel = {
   },
   perform      : function(action, obj, cb) {
 
+  },
+
+  clearSuggestions : function() {
+    available.removeAll();
   },
 
   addFilterResult : function(err, data) {
@@ -135,6 +146,23 @@ input.event.bind("keyboard.down", function(name, data) {
     case 9:
       if (children) {
         available.child(composer.chisel.selection).background = '#BF6600';
+        var textNode = available.child(composer.chisel.selection);
+        composer.chisel.clearSuggestions();
+        textNode.text = input.text;
+        input.fromString("");
+        frag.removeAll();
+        frag.add(textNode);
+        textNode.x = frag.x+10;
+        textNode.y = frag.y+10;
+        textNode.width = frag.width-20;
+        textNode.height = frag.height-20;
+        textNode.style.paddingTop = textNode.height/3;
+        textNode.style.paddingLeft = 5;
+
+        // TODO: shift context
+
+        // get a list of actions to display to the user
+
       }
     break;
 
@@ -185,9 +213,7 @@ input.event.bind("text.*", function(name, data) {
     var str = data.node.toString(), node;
 
     // clean the display
-    while(available.children.length > 0) {
-      available.remove(available.child(0));
-    }
+    composer.chisel.clearSuggestions();
     composer.chisel.selection = 0;
 
     if (str.length > 0) {
