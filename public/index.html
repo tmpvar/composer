@@ -293,7 +293,7 @@
           saveButton.event.bind("mouse.up", mouseUp);
           editor.fromString(nodeCode);
 
-          camera.add(editorWindow.add(editor.add(lineNumbers))
+          composer.camera.add(editorWindow.add(editor.add(lineNumbers))
                 .add(name)
                 .add(saveButton));
         }

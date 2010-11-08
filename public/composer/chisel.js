@@ -171,7 +171,9 @@ composer.chisel = {
   },
 
   clearSuggestions : function() {
-    available.removeAll();
+    if (available && available.removeAll) {
+      available.removeAll();
+    }
   },
 
   addFilterResult : function(err, data) {
