@@ -183,6 +183,7 @@ composer.chisel = {
   addFilterResult : function(err, data) {
     if (err) {
       console.log("ERROR:", err);
+      return;
     };
 
     if (data.str === input.toString()) {
@@ -277,6 +278,12 @@ input.event.bind("text.*", function(name, data) {
     // clean the display
     composer.chisel.clearSuggestions();
     composer.chisel.selection = 0;
+
+    composer.chisel.addFilterResult(null, {
+      name : str,
+      str  : str,
+      type : ['text']
+    });
 
     if (str.length > 0) {
         composer.chisel.context.filter(str);

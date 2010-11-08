@@ -25,6 +25,7 @@
     <!-- Chisel actions -->
     <script type="text/javascript" src="/composer/chisel/action/add.js"></script>
     <script type="text/javascript" src="/composer/chisel/action/edit.js"></script>
+    <script type="text/javascript" src="/composer/chisel/action/node-new.js"></script>
 
 
     <script type="text/javascript" src="/composer/transport.js"></script>
@@ -129,8 +130,8 @@
           }
         })
 
-        var chooser = null,
-            editorWindow = false;
+        var chooser = null;
+        composer.editorWindow = false;
 
 
         document.addEventListener("keydown", function(ev) {
@@ -146,12 +147,12 @@
           } else if (ev.keyCode === 27) { // escape
             composer.chisel.hide();
 
-            if (editorWindow) {
-              editorWindow.parent.remove(editorWindow);
-              for (var i=0; i<editorWindow.children.length; i++) {
-                editorWindow.children[i].parent = null;
+            if (composer.editorWindow) {
+              composer.editorWindow.parent.remove(composer.editorWindow);
+              for (var i=0; i<composer.editorWindow.children.length; i++) {
+                composer.editorWindow.children[i].parent = null;
               }
-              editorWindow = false;
+              composer.editorWindow = false;
             }
           } else if (ev.keyCode === 32) {
             composer.chisel.show();
@@ -165,15 +166,15 @@
 
         composer.spawnEditor = function(newNode, nodeName, nodeCode) {
           // allow only one editor at a time
-          if (editorWindow) {
-            editorWindow.parent.remove(editorWindow);
+          if (composer.editorWindow) {
+            composer.editorWindow.parent.remove(composer.editorWindow);
             name.parent === null;
             editor.parent === null;
-            editorWindow = false;
+            composer.editorWindow = false;
           }
 
           // spawn a new carena
-          editorWindow = carena.build({
+          composer.editorWindow = carena.build({
             style : {
               backgroundColor: "blue",
             },
@@ -256,7 +257,7 @@
 
               // remove the editor
               // TODO: figure out the root cause of this
-              if (!editor.parent || !name.parent || !editorWindow.parent) {
+              if (!editor.parent || !name.parent || !composer.editorWindow.parent) {
                 return;
               }
               var req = {
@@ -269,10 +270,10 @@
                 success : function() {
                   editor.parent.remove(editor);
                   name.parent.remove(name);
-                  editorWindow.parent.remove(editorWindow);
+                  composer.editorWindow.parent.remove(composer.editorWindow);
                   name.parent === null;
                   editor.parent === null;
-                  editorWindow = false;
+                  composer.editorWindow = false;
                 }
               };
               jQuery.ajax({
@@ -295,16 +296,23 @@
           saveButton.event.bind("mouse.up", mouseUp);
           editor.fromString(nodeCode);
 
-          composer.camera.add(editorWindow.add(editor.add(lineNumbers))
+          composer.camera.add(composer.editorWindow.add(editor.add(lineNumbers))
                 .add(name)
                 .add(saveButton));
+
+          name.setFocus(true);
+          name.event.bind("keyboard.down", function(name, data) {
+            if (data.key === 9) {
+              editor.setFocus(true);
+            }
+          });
         }
 
 
 
         // Console stuff
         window.addEventListener("keydown", function(ev) {
-          if (ev.keyCode === 13 && editorWindow === false) {
+          if (ev.keyCode === 13 && composer.editorWindow === false) {
             terminal.fromString("> executing....");
             jQuery.get("/nodes/" + composer.currentFlow + "/run", function(data)
             {
