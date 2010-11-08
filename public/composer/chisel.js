@@ -73,12 +73,86 @@ chooser.add(input).add(available).add(action).add(frag);
 composer.chisel = {
   filters      : [],
   actions      : {},
+
+  contexts     : {
+    frag : {
+      activate : function() { /* noop */ },
+      prev     : function() { /* noop */ },
+      next     : function() {
+        available.child(composer.chisel.selection).background = '#BF6600';
+        var textNode = available.child(composer.chisel.selection);
+        composer.chisel.clearSuggestions();
+        textNode.text = input.text;
+        input.fromString("");
+        frag.removeAll();
+        frag.add(textNode);
+        textNode.x = frag.x+10;
+        textNode.y = frag.y+10;
+        textNode.width = frag.width-20;
+        textNode.height = frag.height-20;
+        textNode.style.paddingTop = textNode.height/3;
+        textNode.style.paddingLeft = 5;
+        composer.chisel.context = composer.chisel.contexts.action;
+        composer.chisel.context.activate(textNode);
+      },
+      filter : function(str) {
+        for (var i=0; i<composer.chisel.filters.length; i++) {
+          composer.chisel.filters[i](str, composer.chisel.addFilterResult);
+        }
+      }
+    },
+    action : {
+      activate : function(node) {
+        composer.chisel.contexts.action.filter('');
+        composer.chisel.selection = 0;
+      },
+      prev : function() {
+        action.removeAll();
+        frag.removeAll();
+        composer.chisel.context = composer.chisel.contexts.frag;
+      },
+      next : function() {
+        // actually perform the action
+        var activeNode = available.child(composer.chisel.selection);
+        // pass the data back into the fn
+        activeNode.representation.data.fn(frag.child(0));
+
+        // reset state
+        composer.chisel.context = composer.chisel.contexts.frag;
+        composer.chisel.hide();
+      },
+      filter : function(str) {
+        var representation = node.representation, i;
+        for (var t=0; t<representation.type.length; t++) {
+          var type = representation.type[t];
+          if (composer.chisel.actions[type]) {
+            var actions = composer.chisel.actions[type],
+                l       = actions.length,
+                i;
+
+            for (i=0; i<l; i++) {
+              var action = composer.chisel.actions[type][i];
+              composer.chisel.addFilterResult(null, {
+                name : action.name,
+                str  : str,
+                data : action
+              });
+            }
+          }
+        }
+      }
+    }
+  },
+
   selection    : 0,
-  addAction    : function(type, cb) {
+  addAction    : function(type, name, cb) {
     if (!composer.chisel.actions[type]) {
       composer.chisel.actions[type] = [];
     }
-    composer.chisel.actions[type].push(cb);
+    composer.chisel.actions[type].push({
+      name : name,
+      fn   : cb
+    });
   },
   modalManager : null,
   hide         : function() {
@@ -132,6 +206,8 @@ composer.chisel = {
   }
 };
 
+composer.chisel.context = composer.chisel.contexts.frag;
+
 available.event.bind("mouse.in", function(name, data) {
   available.child(composer.chisel.selection).background = '#103069';
   composer.chisel.selection = data.target.parent.childIndex(data.target);
@@ -144,26 +220,7 @@ input.event.bind("keyboard.down", function(name, data) {
 
   switch (data.key) {
     case 9:
-      if (children) {
-        available.child(composer.chisel.selection).background = '#BF6600';
-        var textNode = available.child(composer.chisel.selection);
-        composer.chisel.clearSuggestions();
-        textNode.text = input.text;
-        input.fromString("");
-        frag.removeAll();
-        frag.add(textNode);
-        textNode.x = frag.x+10;
-        textNode.y = frag.y+10;
-        textNode.width = frag.width-20;
-        textNode.height = frag.height-20;
-        textNode.style.paddingTop = textNode.height/3;
-        textNode.style.paddingLeft = 5;
-
-        // TODO: shift context
-
-        // get a list of actions to display to the user
-
-      }
+      composer.chisel.context.next();
     break;
 
     case 38: // up
@@ -195,7 +252,6 @@ input.event.bind("keyboard.down", function(name, data) {
     break;
 
     default:
-      console.log(data.key);
       ret = true;
     break;
    }
@@ -217,9 +273,7 @@ input.event.bind("text.*", function(name, data) {
     composer.chisel.selection = 0;
 
     if (str.length > 0) {
-      for (var i=0; i<composer.chisel.filters.length; i++) {
-        composer.chisel.filters[i](str, composer.chisel.addFilterResult);
-      }
+        composer.chisel.context.filter(str);
     }
   }, 100);
 });
@@ -261,68 +315,7 @@ input.event.bind("text.*", function(name, data) {
               spawnEditor(false, item.name, item.code);
             });
             tmp.event.bind("mouse.click", function(name) {
-              // Build a real node.
-              var rnd = carena.build({x:20, y: 20, width: 100, height:100,
-                code : window.location + "nodes/" + item.name,
-                name : item.name || "",
-                style : {
-                  backgroundColor: "rgb(" + (new Date()).getTime()%255 +
-                       ", 128," + Math.round(Math.random()*200%255) + ")",
-                }
-              }, [
-                "carena.Box",
-                "carena.Draggable",
-                "carena.RelativeToParent",
-                "composer.Functional"
-              ],{});
 
-              var label = carena.build({
-                x: rnd.x,
-                y:rnd.y,
-                width:rnd.width,
-                height: 20,
-                color: "white",
-                text: item.name
-              },[
-                "carena.Node",
-                "cider.Textual",
-                "carena.RelativeToParent"
-              ]);
-              label.font.set(defaultFont);
-              label.style.paddingLeft = 2;
-              label.style.paddingTop = 2;
-
-              for (var i=0; i<item.ports['out'].length; i++) {
-                rnd.add(carena.build({
-                  x: rnd.x + (i*22),
-                  y: rnd.y + rnd.height,
-                  width: 20,
-                  height:10,
-                  style : {
-                    backgroundColor: "green"
-                  },
-                  port : item.ports['out'][i]
-                }, [
-                  "carena.RelativeToParent", "composer.Port"
-                ]));
-              }
-
-              for (var j=0; j<item.ports['in'].length; j++) {
-                rnd.add(carena.build({
-                  x: rnd.x + (j*22),
-                  y: rnd.y - 10,
-                  width: 20,
-                  height:10,
-                  style : {
-                    backgroundColor : "red"
-                  },
-                  port : item.ports['in'][j]
-                }, [
-                  "carena.RelativeToParent", "composer.Port"
-                ]));
-              }
-
-              camera.target.add(rnd.add(label));
               if (chooser.parent) {
                 chooser.parent.remove(chooser);
               }
