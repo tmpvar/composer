@@ -149,7 +149,7 @@ composer.chisel = {
         composer.chisel.hide();
       },
       filter : function(str) {
-        var representation = node.representation, i;
+        var representation = frag.child(0).representation, i;
         for (var t=0; t<representation.type.length; t++) {
           var type = representation.type[t];
           if (composer.chisel.actions[type]) {
@@ -254,6 +254,7 @@ input.event.bind("keyboard.down", function(name, data) {
   var ret = false, children = !!available.children.length;
 
   switch (data.key) {
+    case 13:
     case 9:
       if (data.shiftKey) {
         composer.chisel.context.prev();
