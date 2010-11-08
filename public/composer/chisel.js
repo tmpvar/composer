@@ -79,6 +79,9 @@ composer.chisel = {
       activate : function() { /* noop */ },
       prev     : function() { /* noop */ },
       next     : function() {
+        if (!available.child(composer.chisel.selection)) {
+          return false;
+        }
         available.child(composer.chisel.selection).background = '#BF6600';
         var textNode = available.child(composer.chisel.selection);
         composer.chisel.clearSuggestions();

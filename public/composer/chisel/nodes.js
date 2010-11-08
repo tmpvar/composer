@@ -3,13 +3,15 @@ composer.chisel.filters.push(function(str, cb) {
     url      : "/chisel?q=" + str + "",
     dataType : "json",
     success  : function(data) {
-      for (var i=0; i<data.length; i++) {
-        cb(null, {
-          str : str,
-          data : data[i],
-          name : data[i].name,
-          type : ['node', data[i].node.type]
-        });
+      if (data) {
+        for (var i=0; i<data.length; i++) {
+          cb(null, {
+            str : str,
+            data : data[i],
+            name : data[i].name,
+            type : ['node', data[i].node.type]
+          });
+        }
       }
     },
     error: function(text) {
