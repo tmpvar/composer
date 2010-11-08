@@ -108,6 +108,8 @@ composer.chisel = {
         composer.chisel.context.activate(textNode);
       },
       filter : function(str, defaultSelection) {
+        if (str.length === 0) { return; }
+
         defaultSelection = defaultSelection || 0;
         // echo the search term
         composer.chisel.addFilterResult(null, {
@@ -159,11 +161,16 @@ composer.chisel = {
 
             for (i=0; i<l; i++) {
               var action = composer.chisel.actions[type][i];
-              composer.chisel.addFilterResult(null, {
-                name : action.name,
-                str  : str,
-                data : action
-              });
+              if (action      &&
+                  action.name &&
+                  action.name.indexOf(str) !== -1)
+              {
+                composer.chisel.addFilterResult(null, {
+                  name : action.name,
+                  str  : str,
+                  data : action
+                });
+               }
             }
           }
         }
@@ -252,7 +259,7 @@ available.event.bind("mouse.in", function(name, data) {
 // NOTE: this only works because input hasn't bound to this event yet.
 input.event.bind("keyboard.down", function(name, data) {
   var ret = false, children = !!available.children.length;
-
+console.log(data.key);
   switch (data.key) {
     case 13:
     case 9:
@@ -287,6 +294,17 @@ input.event.bind("keyboard.down", function(name, data) {
       }
     break;
 
+    // escape
+    case 27:
+      if (input.toString().length > 0) {
+        input.fromString('');
+        composer.chisel.clearSuggestions();
+        composer.chisel.context.filter('');
+      } else {
+        ret = true;
+      }
+    break;
+
     case 13:
       console.log("return");
     break;
@@ -311,10 +329,7 @@ input.event.bind("text.*", function(name, data) {
     // clean the display
     composer.chisel.clearSuggestions();
     composer.chisel.selection = 0;
-
-    if (str.length > 0) {
-      composer.chisel.context.filter(str);
-    }
+    composer.chisel.context.filter(str);
   }, 100);
 });
 
