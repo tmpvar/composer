@@ -76,7 +76,15 @@ composer.chisel = {
 
   contexts     : {
     frag : {
-      activate : function() { /* noop */ },
+      activate : function() {
+        if (frag.children.length > 0) {
+          var textNode = frag.child(0),
+              text     = textNode.representation.str;
+          frag.removeAll();
+          input.fromString(text);
+          composer.chisel.contexts.frag.filter(text, textNode.selection);
+        }
+      },
       prev     : function() { /* noop */ },
       next     : function() {
         if (!available.child(composer.chisel.selection)) {
@@ -86,6 +94,7 @@ composer.chisel = {
         var textNode = available.child(composer.chisel.selection);
         composer.chisel.clearSuggestions();
         textNode.text = input.text;
+        textNode.selection = composer.chisel.selection;
         input.fromString("");
         frag.removeAll();
         frag.add(textNode);
@@ -98,9 +107,23 @@ composer.chisel = {
         composer.chisel.context = composer.chisel.contexts.action;
         composer.chisel.context.activate(textNode);
       },
-      filter : function(str) {
+      filter : function(str, defaultSelection) {
+        defaultSelection = defaultSelection || 0;
+        // echo the search term
+        composer.chisel.addFilterResult(null, {
+          name : str,
+          str  : str,
+          type : ['text']
+        });
+        var remaining = composer.chisel.filters.length;
         for (var i=0; i<composer.chisel.filters.length; i++) {
-          composer.chisel.filters[i](str, composer.chisel.addFilterResult);
+          composer.chisel.filters[i](str, function(err, data) {
+            remaining--;
+            composer.chisel.addFilterResult(err, data)
+            if (remaining <= 0) {
+              composer.chisel.setSelection(defaultSelection);
+            }
+          });
         }
       }
     },
@@ -111,8 +134,9 @@ composer.chisel = {
       },
       prev : function() {
         action.removeAll();
-        frag.removeAll();
+        composer.chisel.clearSuggestions()
         composer.chisel.context = composer.chisel.contexts.frag;
+        composer.chisel.context.activate();
       },
       next : function() {
         // actually perform the action
@@ -180,6 +204,12 @@ composer.chisel = {
     }
   },
 
+  setSelection : function(index) {
+    available.child(composer.chisel.selection).background = '#103069';
+    composer.chisel.selection = (index < available.children.length) ? index : 0;
+    available.child(composer.chisel.selection).background = '#5E99FF';
+  },
+
   addFilterResult : function(err, data) {
     if (err) {
       console.log("ERROR:", err);
@@ -216,9 +246,7 @@ composer.chisel = {
 composer.chisel.context = composer.chisel.contexts.frag;
 
 available.event.bind("mouse.in", function(name, data) {
-  available.child(composer.chisel.selection).background = '#103069';
-  composer.chisel.selection = data.target.parent.childIndex(data.target);
-  available.child(composer.chisel.selection).background = '#5E99FF';
+  composer.chisel.setSelection(data.target.parent.childIndex(data.target));
 });
 
 // NOTE: this only works because input hasn't bound to this event yet.
@@ -227,7 +255,11 @@ input.event.bind("keyboard.down", function(name, data) {
 
   switch (data.key) {
     case 9:
-      composer.chisel.context.next();
+      if (data.shiftKey) {
+        composer.chisel.context.prev();
+      } else {
+        composer.chisel.context.next();
+      }
     break;
 
     case 38: // up
@@ -279,72 +311,9 @@ input.event.bind("text.*", function(name, data) {
     composer.chisel.clearSuggestions();
     composer.chisel.selection = 0;
 
-    composer.chisel.addFilterResult(null, {
-      name : str,
-      str  : str,
-      type : ['text']
-    });
-
     if (str.length > 0) {
-        composer.chisel.context.filter(str);
+      composer.chisel.context.filter(str);
     }
   }, 100);
 });
-
-/*
-      jQuery.ajax({
-        url: "/nodes",
-        dataType: "json",
-        success: function(data) {
-          var keys = Object.keys(data), l = keys.length, h = 30, w = 300;
-          var buildSelectionNode = function(item) {
-            var tmp = carena.build({
-              y: chooser.y + 1+(i*h)+(i*1),
-              x: chooser.x + 10,
-              width: chooser.width-20,
-              height: h,
-              background: "black",
-              color: "white",
-              code: item.code || "",
-              name: item.name || ""
-            }, [
-              "carena.Node",
-              "carena.Eventable",
-              "composer.Functional",
-              "cider.Textual"
-            ]);
-            tmp.font.set(defaultFont);
-            tmp.event.bind("mouse.in", function() {
-              tmp.background = "#222";
-            });
-
-            tmp.event.bind("mouse.out", function() {
-              tmp.background = "black";
-            });
-
-            tmp.event.bind("mouse.click.2", function() {
-              chooser.parent.remove(chooser);
-              chooser = null;
-              spawnEditor(false, item.name, item.code);
-            });
-            tmp.event.bind("mouse.click", function(name) {
-
-              if (chooser.parent) {
-                chooser.parent.remove(chooser);
-              }
-              chooser = null;
-            });
-
-            tmp.style.paddingLeft = 10;
-            tmp.style.paddingTop  = 6;
-            tmp.fromString(item.name);
-            return tmp;
-          }
-
-          for (var i=0; i<l; i++) {
-            chooser.add(buildSelectionNode(data[keys[i]]));
-          }
-        }
-      });
-    }*/
 
