@@ -28,7 +28,7 @@
     <script type="text/javascript" src="/composer/transport.js"></script>
 
     <script type="text/javascript">
-      jQuery(function() {
+      jQuery(document).ready(function() {
           composer.renderer = carena.build({}, ["carena.Renderer"], {
             canvas: document.getElementById("composer"),
             style: {

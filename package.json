@@ -1,7 +1,7 @@
 {
   "name": "composer",
   "description": "Visually describe functionality, and then execute it",
-  "version": "0.1.2",
+  "version": "0.1.3",
   "keywords": [ "visual programming", "control/data flow" ],
   "maintainers": [
     { "name": "Elijah Insua", "web": "http://tmpvar.com" }
@@ -21,3 +21,4 @@
     "socket.io": ">=0.5.0"
   }
 }
+
