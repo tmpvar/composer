@@ -24,6 +24,8 @@
 
     <!-- Chisel actions -->
     <script type="text/javascript" src="/composer/chisel/action/add.js"></script>
+    <script type="text/javascript" src="/composer/chisel/action/edit.js"></script>
+
 
     <script type="text/javascript" src="/composer/transport.js"></script>
 
@@ -103,7 +105,7 @@
                     url      : data.target.code,
                     dataType : "json",
                     success  : function(codeObj) {
-                      spawnEditor(true, codeObj.name, codeObj.code);
+                      composer.spawnEditor(true, codeObj.name, codeObj.code);
                     }
                   });
                   break;
@@ -161,7 +163,7 @@
         }, true);
 
 
-        function spawnEditor(newNode, nodeName, nodeCode) {
+        composer.spawnEditor = function(newNode, nodeName, nodeCode) {
           // allow only one editor at a time
           if (editorWindow) {
             editorWindow.parent.remove(editorWindow);
