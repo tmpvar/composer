@@ -259,7 +259,7 @@ available.event.bind("mouse.in", function(name, data) {
 // NOTE: this only works because input hasn't bound to this event yet.
 input.event.bind("keyboard.down", function(name, data) {
   var ret = false, children = !!available.children.length;
-console.log(data.key);
+
   switch (data.key) {
     case 13:
     case 9:
@@ -303,10 +303,6 @@ console.log(data.key);
       } else {
         ret = true;
       }
-    break;
-
-    case 13:
-      console.log("return");
     break;
 
     default:
