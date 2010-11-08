@@ -161,6 +161,7 @@ composer.chisel = {
     action.removeAll();
     input.setFocus(false);
     input.fromString("");
+    available.removeAll();
   },
   show         : function() {
     input.setFocus(true);
