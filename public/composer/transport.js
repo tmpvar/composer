@@ -1,17 +1,6 @@
 composer.transport ={
   decode : function(obj) {
-    var flow = carena.build({
-      x     : 0,
-      y     : 0,
-      width : 100,
-      height: 100,
-      color : 'darkgrey'},
-    [
-      "carena.Node",
-      "carena.Eventable",
-      "carena.Draggable",
-      "carena.RelativeToParent",
-    ]);
+    var flow = composer.scene;
 
     // Recreate the nodes
     if (obj.nodes) {

@@ -18,6 +18,7 @@
     <script type="text/javascript" src="/composer/core.js"></script>
     <script type="text/javascript" src="/composer/terminal.js"></script>
     <script type="text/javascript" src="/composer/editor.js"></script>
+    <script type="text/javascript" src="/composer/navigator.js"></script>
     <script type="text/javascript" src="/composer/chisel.js"></script>
     <script type="text/javascript" src="/composer/chisel/nodes.js"></script>
 
@@ -48,10 +49,40 @@
             renderer: composer.renderer
           });
 
-        var scene, terminal = composer.createTerminal();
-        composer.camera.add(terminal);
+        var scene = composer.scene = carena.build({},[
+          'carena.Node',
+          'carena.Draggable',
+          'carena.RelativeToParent'
+        ]),
+        terminal = composer.createTerminal();
 
+        // Setup the scene
+        composer.camera.add(terminal);
+        composer.camera.target = scene;
         composer.chisel.modalManager = composer.camera;
+        scene.containsPoint = function() { return true; }
+        scene.event.bind("node.dirty", save);
+        scene.event.bind("mouse.down", function(name, data) {
+          selected = data.target;
+        });
+        // TODO: woah, this is a global handler. is this a good thing?
+        scene.event.bind("mouse.click.2", function(name,data) {
+          // double click
+          for (var i=0; i<data.target.features.length; i++) {
+            if (data.target.features[i] === "composer.Functional") {
+              jQuery.ajax({
+                url      : data.target.code,
+                dataType : "json",
+                success  : function(codeObj) {
+                  composer.spawnEditor(true, codeObj.name, codeObj.code);
+                }
+              });
+              break;
+            }
+          }
+        });
+
+
 
         var saving = false;
         function save() {
@@ -68,67 +99,19 @@
             });
           }
         }
-        var selected = null;
-        jQuery.ajax({
-          url : "/nodes/" + composer.currentFlow,
-          dataType: "json",
-          success : function(data) {
-            scene = composer.transport.decode(data);
-            window.scene = scene;
-            scene.width=0;
-            scene.height=0;
-            scene.containsPoint = function() { return true; }
-          },
-          error : function() {
-            // Create the current flow
-            jQuery.ajax({
-              type : "post",
-              url  : "/nodes/",
-              data : { name: composer.currentFlow, type: "flow" },
-              success  : function() {
-                window.location.reload();
-              }
 
-            });
-          },
-          complete: function() {
-            scene.event.bind("node.dirty", save);
-            scene.event.bind("mouse.down", function(name, data) {
-              selected = data.target;
-            });
-
-            // TODO: woah, this is a global handler. is this a good thing?
-            scene.event.bind("mouse.click.2", function(name,data) {
-              // double click
-              for (var i=0; i<data.target.features.length; i++) {
-                if (data.target.features[i] === "composer.Functional") {
-                  jQuery.ajax({
-                    url      : data.target.code,
-                    dataType : "json",
-                    success  : function(codeObj) {
-                      composer.spawnEditor(true, codeObj.name, codeObj.code);
-                    }
-                  });
-                  break;
-                }
-              }
-            });
-            composer.camera.target = scene;
-
-            scene.dirty = true;
-            setTimeout(function render() {
-              var ctx = composer.renderer.context;
-              if (ctx.canvas.width !== $(window).width() ||
-                  ctx.canvas.height != $(window).height()-5)
-              {
-                ctx.canvas.width =  $(window).width();
-                ctx.canvas.height = $(window).height()-5;
-              }
-              composer.camera.render();
-              setTimeout(render, 1000/40);
-            }, 0);
+        // Render loop
+        setTimeout(function render() {
+          var ctx = composer.renderer.context;
+          if (ctx.canvas.width !== $(window).width() ||
+              ctx.canvas.height != $(window).height()-5)
+          {
+            ctx.canvas.width =  $(window).width();
+            ctx.canvas.height = $(window).height()-5;
           }
-        })
+          composer.camera.render();
+          setTimeout(render, 1000/40);
+        }, 0);
 
         var chooser = null;
         composer.editorWindow = false;
@@ -159,156 +142,9 @@
           } else if (ev.keyCode === 78 && ev.ctrlKey === true) {
             ev.preventDefault();
             ev.stopPropagation();
-            spawnEditor(true, "", "");
+            composer.spawnEditor(true, "", "");
           }
         }, true);
-
-
-        composer.spawnEditor = function(newNode, nodeName, nodeCode) {
-          // allow only one editor at a time
-          if (composer.editorWindow) {
-            composer.editorWindow.parent.remove(composer.editorWindow);
-            name.parent === null;
-            editor.parent === null;
-            composer.editorWindow = false;
-          }
-
-          // spawn a new carena
-          composer.editorWindow = carena.build({
-            style : {
-              backgroundColor: "blue",
-            },
-            x:100, y: 100,
-            height: 310,
-            width: 400
-          },[
-            "carena.Node",
-            "carena.Draggable"
-          ]);
-
-          var editor = carena.build({
-            x:110,y:140, width: 380, height: 260
-          }, [
-            "carena.Node",
-            "carena.RelativeToParent",
-            "cider.Textual",
-            "cider.Editable",
-            "cider.FocusTarget"
-          ]),
-          lineNumbers = carena.build({},[
-            "cider.LineNumbers",
-            "carena.RelativeToParent"
-          ]),
-          name = carena.build({
-            x:110,
-            y:110,
-            width: 270,
-            height: 20
-          },[
-            "carena.Node",
-            "carena.RelativeToParent",
-            "cider.Textual",
-            "cider.Editable",
-            "cider.FocusTarget"
-          ]),
-          saveButton = carena.build({
-            width: 80,
-            height: 20,
-            x:410,
-            y:110,
-            style : {
-              backgroundColor: "grey"
-            }
-          },[
-            "carena.Box",
-            "carena.Eventable",
-            "carena.RelativeToParent"
-          ]);
-
-          name.style.paddingLeft = 10;
-          name.fromString(nodeName);
-          name.setFocus();
-          name.font.set(composer.defaultFont);
-          editor.font.set(composer.defaultFont);
-          // Setup the button
-          // TODO: this probably could be made easier heh.
-          saveButton.event.bind("mouse.in", function() {
-            saveButton.color = "orange";
-            return false;
-          });
-          saveButton.event.bind("mouse.out", function(name, data) {
-            saveButton.color = "grey";
-            return false;
-          });
-          saveButton.render = function(renderer) {
-
-            renderer.context.fillStyle = saveButton.color;
-            renderer.context.fillRect(saveButton.x,
-                                      saveButton.y,
-                                      saveButton.width,
-                                      saveButton.height);
-
-            renderer.context.fillStyle = "black";
-            renderer.context.fillText("save", saveButton.x+20, saveButton.y+14);
-          };
-          function mouseUp(evName, data) {
-            if (data.target === saveButton) {
-              // Save to storage
-
-              // remove the editor
-              // TODO: figure out the root cause of this
-              if (!editor.parent || !name.parent || !composer.editorWindow.parent) {
-                return;
-              }
-              var req = {
-                contentType: "application/json",
-                dataType : "json",
-                data : JSON.stringify({
-                  name: name.toString(),
-                  code: editor.toString()
-                }),
-                success : function() {
-                  editor.parent.remove(editor);
-                  name.parent.remove(name);
-                  composer.editorWindow.parent.remove(composer.editorWindow);
-                  name.parent === null;
-                  editor.parent === null;
-                  composer.editorWindow = false;
-                }
-              };
-              jQuery.ajax({
-
-                url: "/nodes/"+name.toString(),
-                success : function() { newNode = false; },
-                error   : function() { newNode = true; },
-                contentType : "application/json",
-                dataType : 'json',
-                complete : function() {
-                  req.url = (newNode) ? "/nodes" : "/nodes/" + name.toString();
-                  req.type = (newNode) ? "post" : "put";
-                  jQuery.ajax(req);
-                }
-              });
-
-              return false;
-            }
-          }
-          saveButton.event.bind("mouse.up", mouseUp);
-          editor.fromString(nodeCode);
-
-          composer.camera.add(composer.editorWindow.add(editor.add(lineNumbers))
-                .add(name)
-                .add(saveButton));
-
-          name.setFocus(true);
-          name.event.bind("keyboard.down", function(name, data) {
-            if (data.key === 9) {
-              editor.setFocus(true);
-            }
-          });
-        }
-
-
 
         // Console stuff
         window.addEventListener("keydown", function(ev) {
@@ -330,11 +166,7 @@
   Add nodes to the scene and link them up to perform operations
 
   Keys:
-    control+n - create a new node
-    space     - add existing node
-    escape    - close editor / menu
-    click*2   - edit an existing node (menu or node)
-    return    - execute (results are shown in the terminal)
+    space - use chisel to perform actions
 
 </pre>
   </body>

@@ -1,8 +1,8 @@
 (function(out) {
   var composer = out.composer = {
-    currentFlow : "THEFLOW",
+    currentFlow : false,
     defaultFont : "16px ProggyClean",
-    defaultText : function(type) { 
+    defaultText : function(type) {
       return $("#" + type + "-text").text();
     },
     createNode : function(nodeId, nodeObj, fn) {
