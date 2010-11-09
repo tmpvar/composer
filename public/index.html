@@ -27,12 +27,17 @@
     <script type="text/javascript" src="/composer/chisel/action/add.js"></script>
     <script type="text/javascript" src="/composer/chisel/action/edit.js"></script>
     <script type="text/javascript" src="/composer/chisel/action/node-new.js"></script>
+    <script type="text/javascript" src="/composer/chisel/action/flow-edit.js"></script>
+    <script type="text/javascript" src="/composer/chisel/action/flow-new.js"></script>
 
 
     <script type="text/javascript" src="/composer/transport.js"></script>
 
     <script type="text/javascript">
       jQuery(document).ready(function() {
+
+          route('#/nodes/:node')
+
           composer.renderer = carena.build({}, ["carena.Renderer"], {
             canvas: document.getElementById("composer"),
             style: {
