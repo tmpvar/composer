@@ -14,7 +14,7 @@ var item = node.representation.data.node;
     "carena.Draggable",
     "carena.RelativeToParent",
     "composer.Functional"
-  ],{});
+  ]);
 
   var label = carena.build({
     x: rnd.x,

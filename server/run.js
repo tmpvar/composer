@@ -211,9 +211,14 @@ connect.createServer.apply(connect, [
         req.body.ports = jsToPorts(req.body.code);
       }
 
-      nodes[body.name] = body;
-      res.writeHead("201", {"Content-type" : "application/json"});
-      res.end(JSON.stringify(nodes[body.name], null, "  "));
+      if (!nodes[body.name]) {
+        nodes[body.name] = body;
+        res.writeHead("201", {"Content-type" : "application/json"});
+        res.end(JSON.stringify(nodes[body.name], null, "  "));
+      } else {
+        res.writeHead("409", {"Content-type" : "application/json"});
+        res.end('{"error": "duplicate"}');
+      }
     });
 
     app.get("/nodes/:name", function(req, res, next) {

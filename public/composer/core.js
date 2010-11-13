@@ -109,7 +109,12 @@
     });
   });
 
-  // Features
+  carena.addFeature("composer.Composite", function(obj, options, storage) {
+    carena.require("carena.Functional", arguments);
+    return carena.applyProperties(obj,{
+    });
+  });
+
   carena.addFeature("composer.ModalManager", function(obj, options, storage) {
     carena.require("carena.Node", arguments);
     var safe = { modal : false };
