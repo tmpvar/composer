@@ -1,6 +1,6 @@
 composer.transport ={
-  decode : function(obj) {
-    var flow = composer.scene;
+  decode : function(obj, parentNode, cb) {
+    parentNode = parentNode || composer.scene;
 
     // Recreate the nodes
     if (obj.nodes) {
@@ -9,6 +9,15 @@ composer.transport ={
         if (obj.nodes.hasOwnProperty(nodeId)) {
           nodeCount++;
           current = obj.nodes[nodeId];
+
+          if (parentNode.hasFeature("composer.Composite")) {
+            current.features = [
+              "carena.Node",
+              "carena.Renderable",
+              "composer.Functional",
+              "composer.MicroNode"
+            ];
+          }
           composer.createNode(nodeId, current, function(err, node) {
             nodeCount--;
             if (err) {
@@ -17,7 +26,7 @@ composer.transport ={
             }
             // TODO: keep the id map in carena
             idMap[node.myId] = node;
-            flow.add(node);
+            parentNode.add(node);
 
             if (nodeCount <= 0 && obj.pipes) {
               for (var pipeIdx in obj.pipes) {
@@ -58,11 +67,16 @@ composer.transport ={
                 }
               }
             }
+
+            if (typeof cb === "function") {
+              cb(null, parent);
+            }
+
           });
         }
       }
     }
-    return flow;
+    return parentNode;
   },
 
   encode : function(branch) {

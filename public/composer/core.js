@@ -13,8 +13,8 @@
           nodeObj.options.width  = 100;
           nodeObj.options.height = 100;
           nodeObj.options.name = data.name;
-          var type     = nodeObj.type,
-              features = [
+          var type     = data.type,
+              features = nodeObj.features || [
                 "carena.Node",
                 "carena.Renderable",
                 "composer.Functional",
@@ -22,10 +22,6 @@
                 "carena.RelativeToParent",
                 "carena.Box"
               ], node;
-
-          if (type === "flow") {
-            features.push("composer.Composite");
-          }
 
           node  = carena.build(nodeObj.options || {}, features, {
                 myId: nodeId
@@ -43,6 +39,7 @@
                 text: nodeObj.name
               }, [
                 "cider.Textual",
+                "carena.Eventable",
                 "carena.RelativeToParent"
               ]);
 
@@ -50,6 +47,58 @@
           label.style.paddingLeft = 5;
           label.style.paddingTop = 0;
           node.add(label);
+
+          // TODO: refactor this into nice pieces
+          if (type === "flow") {
+            node.width = 200;
+            node.height = 200;
+            label.width = 200;
+
+            var innards = carena.build({
+              width : node.width-4,
+              height: (node.height-label.height)-4,
+              x     : node.x+2,
+              y     : node.y+label.height+2,
+              style : {
+                backgroundColor : "black"
+              }
+            }, [
+              'carena.Node',
+              'carena.Style',
+              'carena.RelativeToParent',
+            ]),
+            scaleNode = carena.build({
+              width:innards.width,
+              height:innards.height,
+              x: innards.x,
+              y: innards.y
+            },[
+              'carena.Node',
+              'carena.Eventable',
+              'composer.Composite',
+              'carena.RelativeToParent'
+            ]);
+
+            node.add(innards.add(scaleNode));
+
+            jQuery.ajax({
+              url : "/nodes/" + nodeObj.name,
+              dataType: "json",
+              success : function(data) {
+                composer.transport.decode(data, scaleNode, function() {
+                  // calculate the bounds of the children
+                  var bounds = scaleNode.bounds,
+                      scale = (node.width/composer.renderer.canvas.width)*4;
+                  scaleNode.scale = scale;
+                  scaleNode.x = innards.x;
+                  scaleNode.y = innards.y;
+                  fn(null, node);
+                });
+              },
+            });
+            return;
+          }
+
 
           if (data.ports) {
             // build out ports
@@ -124,8 +173,25 @@
 
   carena.addFeature("composer.Composite", function(obj, options, storage) {
     carena.require("composer.Functional", arguments);
-    return carena.applyProperties(obj,{
-    });
+
+    obj.render = function(renderer) {
+      renderer.context.save();
+      renderer.context.translate(obj.x, obj.y);
+      var scale = (obj.parent.width/renderer.canvas.width)*2;
+      renderer.context.scale(scale, scale);
+      for (var i=0; i<obj.children.length; i++) {
+        obj.children[i].render(renderer);
+      }
+      renderer.context.restore();
+      return false;
+    };
+
+    return obj;
+  });
+
+  carena.addFeature("composer.MicroNode", function(obj, options, storage) {
+    obj.containsPoint = function() { return false; };
+    return obj;
   });
 
   carena.addFeature("composer.ModalManager", function(obj, options, storage) {
@@ -291,7 +357,7 @@
         if (!safe.target || !safe.source) {
           return;
         }
-
+        renderer.context.save();
         renderer.context.strokeStyle = obj.color || "yellow";
         renderer.context.lineWidth = 5;
         renderer.context.beginPath();
@@ -302,6 +368,7 @@
                                 safe.target.y + (safe.target.height/2));
         renderer.context.fill();
         renderer.context.stroke();
+        renderer.context.restore();
       },
       dehydrate : function() {
         if (safe.source) {
