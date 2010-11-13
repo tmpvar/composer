@@ -13,14 +13,21 @@
           nodeObj.options.width  = 100;
           nodeObj.options.height = 100;
           nodeObj.options.name = data.name;
-          var node  = carena.build(nodeObj.options || {}, [
+          var type     = nodeObj.type,
+              features = [
                 "carena.Node",
                 "carena.Renderable",
                 "composer.Functional",
                 "carena.Draggable",
                 "carena.RelativeToParent",
                 "carena.Box"
-              ], {
+              ], node;
+
+          if (type === "flow") {
+            features.push("composer.Composite");
+          }
+
+          node  = carena.build(nodeObj.options || {}, features, {
                 myId: nodeId
               }),
               // Build the label
@@ -44,36 +51,42 @@
           label.style.paddingTop = 0;
           node.add(label);
 
-          // build out ports
-          for (var i=0; i<data.ports['out'].length; i++) {
-            node.add(carena.build({
-              x: node.x + (i*22),
-              y: node.y + node.height,
-              width: 20,
-              height:10,
-              style : {
-                backgroundColor: "green"
-              },
-              port : data.ports['out'][i]
-            }, [
-              "carena.RelativeToParent", "composer.Port"
-            ]));
-          }
+          if (data.ports) {
+            // build out ports
+            if (data.ports.out) {
+              for (var i=0; i<data.ports['out'].length; i++) {
+                node.add(carena.build({
+                  x: node.x + (i*22),
+                  y: node.y + node.height,
+                  width: 20,
+                  height:10,
+                  style : {
+                    backgroundColor: "green"
+                  },
+                  port : data.ports['out'][i]
+                }, [
+                  "carena.RelativeToParent", "composer.Port"
+                ]));
+              }
+            }
 
-          for (var j=0; j<data.ports['in'].length; j++) {
-
-            node.add(carena.build({
-              x: node.x + (j*22),
-              y: node.y - 10,
-              width: 20,
-              height:10,
-              style : {
-                backgroundColor : "red"
-              },
-              port : data.ports['in'][j]
-            }, [
-              "carena.RelativeToParent", "composer.Port"
-            ]));
+            // build in ports
+            if (data.ports['in']) {
+              for (var j=0; j<data.ports['in'].length; j++) {
+                node.add(carena.build({
+                  x: node.x + (j*22),
+                  y: node.y - 10,
+                  width: 20,
+                  height:10,
+                  style : {
+                    backgroundColor : "red"
+                  },
+                  port : data.ports['in'][j]
+                }, [
+                  "carena.RelativeToParent", "composer.Port"
+                ]));
+              }
+            }
           }
           fn(null, node);
         }
@@ -110,7 +123,7 @@
   });
 
   carena.addFeature("composer.Composite", function(obj, options, storage) {
-    carena.require("carena.Functional", arguments);
+    carena.require("composer.Functional", arguments);
     return carena.applyProperties(obj,{
     });
   });
