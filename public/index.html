@@ -35,9 +35,6 @@
 
     <script type="text/javascript">
       jQuery(document).ready(function() {
-
-          route('#/nodes/:node')
-
           composer.renderer = carena.build({}, ["carena.Renderer"], {
             canvas: document.getElementById("composer"),
             style: {
@@ -66,7 +63,6 @@
         composer.camera.target = scene;
         composer.chisel.modalManager = composer.camera;
         scene.containsPoint = function() { return true; }
-        scene.event.bind("node.dirty", save);
         scene.event.bind("mouse.down", function(name, data) {
           selected = data.target;
         });
@@ -90,20 +86,39 @@
 
 
         var saving = false;
-        function save() {
+        function save(method) {
+          if (!composer.currentFlow) { return; }
+
+          method = (method) ?
+                    method.toLowerCase() :
+                    'post';
+
+          var url = (method === "post") ?
+                    "/nodes/" :
+                    "/nodes/" + composer.currentFlow;
+
           if (!saving) {
             saving = true;
             jQuery.ajax({
-              type : "post",
-              url  : "/nodes/",
+              type : method,
+              url  : url,
               data : JSON.stringify(composer.transport.encode(scene)),
               contentType : "application/json",
+              dataType: 'json',
               complete : function(data) {
                 saving = false;
+              },
+              error : function(xhr) {
+                if (method === "post" && xhr.status === 409) {
+                  save("put");
+                } else if (method === "put" && xhr.status === 404){
+                  save("post");
+                }
               }
             });
           }
         }
+        composer.save = save;
 
         // Render loop
         setTimeout(function render() {
@@ -161,6 +176,9 @@
             });
           }
         }, true);
+
+        // Poll for changes
+        setInterval(composer.navigator.pollHashChange, 50);
       });
     </script>
   </head>

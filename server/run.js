@@ -244,7 +244,8 @@ connect.createServer.apply(connect, [
           res.writeHead(404, {"Content-type": "application/json"});
           res.end(JSON.stringify({code: 404, body: "Not Found"}));
         } else {
-          if (body.type !== "flow") {
+          console.log(body);
+          if (body.type === "js") {
             body.ports = jsToPorts(body.code);
           }
           nodes[name] = body;
