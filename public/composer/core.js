@@ -143,9 +143,7 @@
     }
   };
 
-  // Features
   carena.addFeature("composer.Functional", function(obj, options, storage) {
-
     storage.name = obj.name || storage.name || "";
     storage.code = storage.code || options.code || obj.code || "";
     carena.require("carena.Node", arguments);
@@ -175,13 +173,18 @@
     carena.require("composer.Functional", arguments);
 
     obj.render = function(renderer) {
+      var scale = ((obj.width)/(obj.bounds.width)), i;
+
       renderer.context.save();
       renderer.context.translate(obj.x, obj.y);
-      var scale = (obj.parent.width/renderer.canvas.width)*2;
       renderer.context.scale(scale, scale);
-      for (var i=0; i<obj.children.length; i++) {
-        obj.children[i].render(renderer);
+
+      for (i=0; i<obj.children.length; i++) {
+        obj.children[i].descend(function(grandchild) {
+          return grandchild.render(renderer);
+        });
       }
+
       renderer.context.restore();
       return false;
     };
