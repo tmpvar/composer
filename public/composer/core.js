@@ -260,57 +260,64 @@
       },
 
       dragstart : function(node, mouse) {
-          var pipe = safe.pipe = obj.createPipe();
-              proxy = safe.proxy = obj.createProxy();
+         var pipe  = safe.pipe = obj.createPipe();
+             proxy = safe.proxy = obj.createProxy();
 
-          pipe.source = obj;
-          pipe.target = proxy;
+        pipe.source = obj;
+        pipe.target = proxy;
 
-          obj.add(proxy);
-          obj.event.trigger("mouse.up", {target: obj, mouse: mouse});
+        obj.add(proxy);
+        obj.event.trigger("mouse.up", {target: obj, mouse: mouse});
+        obj.unshift(pipe);
+        // trigger on the parent of the port to get around a recursion
+        // problem
+        proxy.event.trigger("mouse.down", {
+          target: proxy,
+          collisions: [proxy],
+          mouse: mouse
+        });
+        proxy.event.trigger("mouse.move", {
+          target: proxy,
+          collisions: [proxy],
+          mouse: mouse
+        });
 
-          obj.unshift(pipe);
-          // trigger on the parent of the port to get around a recursion
-          // problem
-          proxy.event.trigger("mouse.down", {
-            target: proxy,
-            collisions: [proxy],
-            mouse: mouse
-          });
+        proxy.event.bind("drag.end", function(name, data) {
 
-          proxy.event.bind("drag.end", function(name, data) {
-            if (data.target === safe.proxy) {
-              var l = data.collisions.length,
-                  i = 0,
-                  parent = safe.proxy.parent,
-                  commonParent = null;
+          //if (data.target === safe.proxy) {
+            var l = data.collisions.length,
+                i = 0,
+                parent = proxy.parent,
+                commonParent = null;
 
-              parent.remove(safe.proxy);
 
-              for (i; i<l; i++) {
-                if (data.collisions && data.collisions[i].port) {
-                  data.source = data.target;
-                  data.target = data.collisions[i];
-                  parent.event.trigger(name, data);
-                  safe.proxy = null;
-                  pipe.target = data.target;
-                  commonParent = carena.commonAncestor(data.target, parent);
-                  if (commonParent) {
-                    safe.pipe.parent.remove(pipe);
-                    commonParent.unshift(pipe);
-                  }
 
-                  return false;
+            for (i; i<l; i++) {
+              if (data.collisions && data.collisions[i].port) {
+                data.source = data.target;
+                data.target = data.collisions[i];
+                parent.event.trigger(name, data);
+                pipe.target = data.target;
+                commonParent = carena.commonAncestor(data.target, parent);
+                if (commonParent) {
+                  safe.pipe.parent.remove(pipe);
+                  commonParent.unshift(pipe);
                 }
+                if (proxy.parent) {
+                  proxy.parent.remove(proxy);
+                }
+                proxy = null;
+                return false;
               }
-
-              // remove the pipe, as the drop target wasnt reached
-              pipe.parent.remove(pipe);
-
-              return false;
             }
-          });
-          return proxy;
+
+            // remove the pipe, as the drop target wasnt reached
+            pipe.parent.remove(pipe);
+
+            return false;
+          //}
+        });
+        return proxy;
       }
     });
   });
