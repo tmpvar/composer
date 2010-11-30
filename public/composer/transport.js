@@ -102,16 +102,18 @@ composer.transport ={
           }
         };
       } else if (node.hasFeature("composer.Pipe")) {
-        pipes.push({
-          source : {
-            id   : node.source.parent.myId,
-            port : [node.source.direction, node.source.name]
-          },
-          target : {
-            id   : node.target.parent.myId,
-            port : [node.target.direction, node.target.name]
-          }
-        });
+        if (node.source && node.target) {
+          pipes.push({
+            source : {
+              id   : node.source.parent.myId,
+              port : [node.source.direction, node.source.name]
+            },
+            target : {
+              id   : node.target.parent.myId,
+              port : [node.target.direction, node.target.name]
+            }
+          });
+        }
       }
 
       if (node.children && node.children.length) {

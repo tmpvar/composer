@@ -172,12 +172,13 @@
   carena.addFeature("composer.Composite", function(obj, options, storage) {
     carena.require("composer.Functional", arguments);
 
-    obj.render = function(renderer) {
-      var scale = ((obj.width)/(obj.bounds.width)), i;
+    obj.renderSteps.push(function(renderer) {
+
+      var scaleX = obj.bounds.width/renderer.canvas.width, i;
 
       renderer.context.save();
       renderer.context.translate(obj.x, obj.y);
-      renderer.context.scale(scale, scale);
+      renderer.context.scale(scaleX, scaleX);
 
       for (i=0; i<obj.children.length; i++) {
         obj.children[i].descend(function(grandchild) {
@@ -187,7 +188,7 @@
 
       renderer.context.restore();
       return false;
-    };
+    });
 
     return obj;
   });
@@ -283,39 +284,36 @@
         });
 
         proxy.event.bind("drag.end", function(name, data) {
+          var l = data.collisions.length,
+              i = 0,
+              parent = proxy.parent,
+              commonParent = null,
+              ret = true;
 
-          //if (data.target === safe.proxy) {
-            var l = data.collisions.length,
-                i = 0,
-                parent = proxy.parent,
-                commonParent = null;
-
-
-
-            for (i; i<l; i++) {
-              if (data.collisions && data.collisions[i].port) {
-                data.source = data.target;
-                data.target = data.collisions[i];
-                parent.event.trigger(name, data);
-                pipe.target = data.target;
-                commonParent = carena.commonAncestor(data.target, parent);
-                if (commonParent) {
-                  safe.pipe.parent.remove(pipe);
-                  commonParent.unshift(pipe);
-                }
-                if (proxy.parent) {
-                  proxy.parent.remove(proxy);
-                }
-                proxy = null;
-                return false;
+          for (i; i<l; i++) {
+            if (data.collisions && data.collisions[i].port) {
+              data.source = data.target;
+              data.target = data.collisions[i];
+              parent.event.trigger(name, data);
+              pipe.target = data.target;
+              commonParent = carena.commonAncestor(data.target, parent);
+              if (commonParent) {
+                safe.pipe.parent.remove(pipe);
+                commonParent.unshift(pipe);
               }
+              ret = false;
+              break;
             }
+          }
 
-            // remove the pipe, as the drop target wasnt reached
-            pipe.parent.remove(pipe);
+          // remove the pipe, as the drop target wasnt reached
+          pipe.parent.remove(pipe);
 
-            return false;
-          //}
+          // Remove the proxy last, as the pipe still is targeted to it.
+          proxy.parent.remove(proxy);
+          proxy = null;
+
+          return ret;
         });
         return proxy;
       }
@@ -333,6 +331,43 @@
     carena.require("carena.Node", arguments);
     carena.require("carena.Eventable", arguments);
 
+    obj.renderSteps.push(function(renderer) {
+      if (!safe.source && typeof storage.target === "string") {
+        obj.parent.descend(function(node, walker) {
+          if (node.id === storage.target) {
+            safe.target = node;
+            walker.stop();
+            return false;
+          }
+        })
+      }
+
+      if (!safe.source && typeof storage.source === "string") {
+        obj.parent.descend(function(node, walker) {
+          if (node.id === storage.source) {
+            safe.source = node;
+            walker.stop();
+            return false;
+          }
+        })
+      }
+      if (!safe.target || !safe.source) {
+        return;
+      }
+      renderer.context.save();
+      renderer.context.strokeStyle = obj.color || "yellow";
+      renderer.context.lineWidth = 5;
+      renderer.context.beginPath();
+      renderer.context.moveTo(safe.source.x + (safe.source.width/2),
+                              safe.source.y + (safe.source.height/2));
+
+      renderer.context.lineTo(safe.target.x + (safe.target.width/2),
+                              safe.target.y + (safe.target.height/2));
+      renderer.context.fill();
+      renderer.context.stroke();
+      renderer.context.restore();
+    });
+
     return carena.applyProperties(obj, {
       // TODO: connect to the target/source x/y events
       //       this may or may not be beneficial for adv. collisions
@@ -343,43 +378,6 @@
       get target() { return safe.target; },
       set target(value) { safe.target = value; },
 
-      render : function(renderer) {
-
-        if (!safe.source && typeof storage.target === "string") {
-          obj.parent.descend(function(node, walker) {
-            if (node.id === storage.target) {
-              safe.target = node;
-              walker.stop();
-              return false;
-            }
-          })
-        }
-
-        if (!safe.source && typeof storage.source === "string") {
-          obj.parent.descend(function(node, walker) {
-            if (node.id === storage.source) {
-              safe.source = node;
-              walker.stop();
-              return false;
-            }
-          })
-        }
-        if (!safe.target || !safe.source) {
-          return;
-        }
-        renderer.context.save();
-        renderer.context.strokeStyle = obj.color || "yellow";
-        renderer.context.lineWidth = 5;
-        renderer.context.beginPath();
-        renderer.context.moveTo(safe.source.x + (safe.source.width/2),
-                                safe.source.y + (safe.source.height/2));
-
-        renderer.context.lineTo(safe.target.x + (safe.target.width/2),
-                                safe.target.y + (safe.target.height/2));
-        renderer.context.fill();
-        renderer.context.stroke();
-        renderer.context.restore();
-      },
       dehydrate : function() {
         if (safe.source) {
           storage.source = safe.source.myId;

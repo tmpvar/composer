@@ -74,7 +74,7 @@ composer.spawnEditor = function(newNode, nodeName, nodeCode) {
     saveButton.color = "grey";
     return false;
   });
-  saveButton.render = function(renderer) {
+  saveButton.renderSteps.push(function(renderer) {
 
     renderer.context.fillStyle = saveButton.color;
     renderer.context.fillRect(saveButton.x,
@@ -84,7 +84,8 @@ composer.spawnEditor = function(newNode, nodeName, nodeCode) {
 
     renderer.context.fillStyle = "black";
     renderer.context.fillText("save", saveButton.x+20, saveButton.y+14);
-  };
+  });
+
   function mouseUp(evName, data) {
     if (data.target === saveButton) {
       // Save to storage

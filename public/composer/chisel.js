@@ -43,11 +43,11 @@ input = carena.build({
   height : 25,
   style : {
     backgroundColor: "#00000",
-    color: "white",
-    paddingLeft : 3,
-    paddingRight : 3,
-    paddingTop : 4,
-    paddingBottom : 3
+    color          : "white",
+    paddingLeft    : 3,
+    paddingRight   : 3,
+    paddingTop     : 4,
+    paddingBottom  : 3
   }
 },[
   "cider.Textual",
@@ -60,12 +60,17 @@ available = carena.build({},[
   "carena.RelativeToParent"
 ]);
 
-chooser._render = chooser.render;
-chooser.render = function(renderer) {
+chooser.renderSteps.push(function(renderer) {
   chooser.x = renderer.canvas.width/2-chooser.width/2;
   chooser.y = renderer.canvas.height/2-chooser.height;
-  return chooser._render(renderer);
-}
+  
+  renderer.context.fillStyle = chooser.style.backgroundColor;
+  renderer.context.fillRect(chooser.x,
+                            chooser.y,
+                            chooser.width,
+                            chooser.height);
+});
+
 input.font.set(composer.defaultFont);
 input.setFocus(false);
 chooser.add(input).add(available).add(action).add(frag);

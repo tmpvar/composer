@@ -83,8 +83,6 @@
           }
         });
 
-
-
         var saving = false;
         function save(method) {
           if (!composer.currentFlow) { return; }
@@ -121,6 +119,7 @@
         composer.save = save;
 
         // Render loop
+        var frame = 0, last = (new Date()).getTime(), now;
         setTimeout(function render() {
           var ctx = composer.renderer.context;
           if (ctx.canvas.width !== $(window).width() ||
@@ -130,8 +129,18 @@
             ctx.canvas.height = $(window).height()-5;
           }
           composer.camera.render();
+
+          now = (new Date()).getTime();
+          fps = Math.floor(1000/(now-last));
+          last = now;
+          document.title = "Composer (" + fps + ")";
           setTimeout(render, 1000/40);
         }, 0);
+        setTimeout(function() {
+          
+          frame = 0;
+        },1000);
+        
 
         var chooser = null;
         composer.editorWindow = false;
