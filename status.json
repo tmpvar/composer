@@ -1,10 +1,7 @@
 {
   "desc" : "Planning",
   "todo" : [
-    "Re-engineer conductor to support multiple callbacks and events",
     "Nested flows",
-    "Flow navigation",
-    "Gnome-do type searching for menuing (add/remove nodes, find flows, etc)",
     "Minimap for showing the user where they are in the current flow",
     "Scale on scroll",
     "[Collaboration] use long poll to allow multiple people to edit a flow at a time",
@@ -12,6 +9,9 @@
     "make conductor work on a-grade browsers if it doesn't already."
   ],
   "done" : [
+    "Re-engineer conductor to support multiple callbacks",
+    "Flow navigation",
+    "Gnome-do type searching for menuing (add/remove nodes, find flows, etc)",
     "clean up click/double click",
     "build node ports from the arguments of functions",
     "first round displaying of ports",
