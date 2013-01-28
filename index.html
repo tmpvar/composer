@@ -10,21 +10,21 @@
       jQuery(function() {
         jQuery("canvas").attr("width", jQuery(document).width());
         jQuery("canvas").attr("height", jQuery(document).height());
-        var instance = Composer(document.getElementById("example1"), {fps: 30}, 
+        var instance = Composer(document.getElementById("example1"), {fps: 30},
                                 [
-                                  Composer.Renderable, 
-                                  Composer.Renderer, 
-                                  Composer.DragManager, 
-                                  Composer.Collidable, 
+                                  Composer.Renderable,
+                                  Composer.Renderer,
+                                  Composer.DragManager,
+                                  Composer.Collidable,
                                   Composer.Draggable]);
-        
+
         window.example1 = instance;
 
         instance.setPos(0,0,-1).setSize(jQuery("canvas").attr("width"), jQuery("canvas").attr("height"));
-        
+
         instance.dragstart = function(ev) {
+          document.body.style.cursor = "none";
           var ox = ev.canvasOffset.x-instance.x, oy = ev.canvasOffset.y-instance.y;
-          instance.z = -10;
           instance.mouseOffset = {x:ox, y:oy};
         };
 
@@ -42,30 +42,31 @@
 
         instance.dragend = function(ev) {
           instance.mouseOffset = {x:0, y:0};
+          document.body.style.cursor = "default";
         };
-        
+
         Composer.Renderer(instance);
-        
+
         var renders = 0, fps = 0, seconds=0, nodesRendered = 0;
-        
+
         setInterval(function() {
           fps = renders;
           renders = 0;
           document.title = "Composer (" + nodesRendered + " @ " + Math.ceil(fps) + " fps)";
         },1000)
-        
+
         instance.renderer.start(function() {
           renders++;
           nodesRendered = 0;
         });
-        
+
         var canvasWidth = jQuery("canvas").attr("width"),
             size  = 100,
             total = (canvasWidth/size * canvasWidth/size),
             width =  jQuery("canvas").attr("width")/size,
             context = instance.context;
-        
-        // TODO: move this into core, probably into a "NodeBuilder" feature/part    
+
+        // TODO: move this into core, probably into a "NodeBuilder" feature/part
         function createNode(x,y,color) {
           var node = Composer.create({}, [Composer.Renderable, Composer.Collidable, Composer.Draggable]);
           node.setSize(size,size).setPos(x,y,0);
@@ -83,24 +84,25 @@
             context.fillStyle = "#FFFFFF";
             context.fillText("z: " + node.z, x+10, y+10);
             context.fillText("" + node.id, x+15, y+25);
-            
+
           };
         }
-        
-        
+
+
         for (var i=0; i<total; i++)
-        { 
+        {
           var base = i*size;
           var x = base%canvasWidth, y = Math.floor(base/canvasWidth)*size;
           createNode(x,y,0);
         }
-        
+
         // Preload
         var radialMenu = new Image();
         radialMenu.src = "./image/pie.png";
-        
+
         // TODO: refactor into core
         var green = 0;
+        var scale = 1;
         document.addEventListener("keypress", function(ev) {
           switch (ev.charCode) {
             case 110:
@@ -109,7 +111,7 @@
               green+=10
               createNode(100, 100, "rgb(" + (green*2%255) + "," + (green%127) + "," + (green%255) + ")");
             break;
-            
+
             case 32:
               ev.preventDefault();
               ev.stopPropagation();
@@ -128,9 +130,24 @@
               return false;
             break
           }
+
+          switch (ev.keyCode) {
+            case 61:
+              scale+=.1;
+              console.log(scale);
+              instance.composer.renderer.scale = scale;
+              instance.composer.renderer.dirty = true;
+            break;
+
+            case 45:
+              scale-=.1;
+              instance.composer.renderer.scale = scale;
+              instance.composer.renderer.dirty = true;
+            break;
+          }
         }, true);
-        
-        
+
+
       });
     </script>
   </head>
